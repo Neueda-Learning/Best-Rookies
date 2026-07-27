@@ -28,21 +28,25 @@ public class PositionController {
         this.positionService = positionService;
     }
 
+    // 创建新持仓
     @PostMapping
     public PositionResponse createPosition(@Valid @RequestBody PositionCreateRequest request) {
         return positionService.createPosition(request);
     }
 
+    // 列出所有或特定组合的持仓
     @GetMapping
     public List<PositionResponse> listPositions(@RequestParam(required = false) Long portfolioId) {
         return positionService.listPositions(portfolioId);
     }
 
+    // 部分更新持仓
     @PatchMapping("/{id}")
     public PositionResponse updatePosition(@PathVariable Long id, @Valid @RequestBody PositionUpdateRequest request) {
         return positionService.updatePosition(id, request);
     }
 
+    // 删除持仓
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePosition(@PathVariable Long id) {

@@ -1,3 +1,4 @@
+-- 创建组合表
 CREATE TABLE portfolios (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
@@ -5,6 +6,7 @@ CREATE TABLE portfolios (
     created_at TIMESTAMP NOT NULL
 );
 
+-- 创建持仓表
 CREATE TABLE positions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     portfolio_id BIGINT NOT NULL,

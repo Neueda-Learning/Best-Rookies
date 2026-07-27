@@ -30,6 +30,7 @@ const props = defineProps({
 
 const emit = defineEmits(['created'])
 
+// 持仓表单数据
 const form = reactive({
   assetType: 'STOCK',
   ticker: '',
@@ -38,6 +39,7 @@ const form = reactive({
   currency: 'USD'
 })
 
+// 提交表单创建持仓
 async function submit() {
   await api.post('/positions', {
     portfolioId: props.portfolioId,
@@ -47,9 +49,11 @@ async function submit() {
     avgCost: form.avgCost,
     currency: form.currency
   })
+  // 重置表单
   form.ticker = ''
   form.quantity = 1
   form.avgCost = 0
+  // 通知父组件已创建
   emit('created')
 }
 </script>

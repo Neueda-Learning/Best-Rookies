@@ -1,12 +1,15 @@
 spring:
   datasource:
+    # 在内存中使用 H2 数据库用于测试，拥有 MySQL 兼容模式
     url: jdbc:h2:mem:portfolio_test;MODE=MySQL;DB_CLOSE_DELAY=-1
     username: sa
     password:
   jpa:
     hibernate:
+      # 验证 DDL（不创建表）
       ddl-auto: validate
     open-in-view: false
   flyway:
+    # 在测试中启用 Flyway 迁移
     enabled: true
 

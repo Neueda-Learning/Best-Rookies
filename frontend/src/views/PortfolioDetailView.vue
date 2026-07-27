@@ -54,8 +54,10 @@ const portfolio = ref(null)
 const summary = ref({ totalPositions: 0, totalCost: 0 })
 const positions = ref([])
 
+// 从路由参数获取组合 ID
 const portfolioId = computed(() => Number(route.params.id))
 
+// 重新加载组合、摘要和持仓数据
 async function reload() {
   const [portfolioRes, summaryRes, positionsRes] = await Promise.all([
     api.get(`/portfolios/${portfolioId.value}`),
@@ -68,11 +70,13 @@ async function reload() {
   positions.value = positionsRes.data
 }
 
+// 删除持仓
 async function removePosition(id) {
   await api.delete(`/positions/${id}`)
   await reload()
 }
 
+// 挂载时加载数据
 onMounted(reload)
 </script>
 

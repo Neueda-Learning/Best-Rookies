@@ -47,11 +47,13 @@ const form = reactive({
   baseCurrency: 'USD'
 })
 
+// 从后端加载组合列表
 async function loadPortfolios() {
   const { data } = await api.get('/portfolios')
   portfolios.value = data
 }
 
+// 创建新组合
 async function createPortfolio() {
   await api.post('/portfolios', {
     name: form.name,
@@ -61,10 +63,12 @@ async function createPortfolio() {
   await loadPortfolios()
 }
 
+// 导航到组合详情页
 function goDetail(id) {
   router.push(`/portfolios/${id}`)
 }
 
+// 挂载时加载组合列表
 onMounted(loadPortfolios)
 </script>
 

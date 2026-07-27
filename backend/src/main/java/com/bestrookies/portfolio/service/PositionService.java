@@ -52,7 +52,7 @@ public class PositionService {
     public PositionResponse updatePosition(Long id, PositionUpdateRequest request) {
         Position position = getPositionEntity(id);
 
-        // PATCH semantics: only fields provided by caller are updated.
+        // PATCH 语义：仅更新调用方提供的字段
         if (request.quantity() != null) {
             position.setQuantity(request.quantity());
         }
@@ -73,7 +73,7 @@ public class PositionService {
     @Transactional(readOnly = true)
     public Position getPositionEntity(Long id) {
         return positionRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Position not found: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("持仓不存在：" + id));
     }
 
     private PositionResponse toResponse(Position position) {
