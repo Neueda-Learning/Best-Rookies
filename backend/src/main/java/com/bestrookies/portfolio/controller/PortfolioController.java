@@ -48,12 +48,14 @@ public class PortfolioController {
         this.portfolioService = portfolioService;
     }
 
+    // 创建新组合
     @PostMapping
     @Operation(summary = "Create a portfolio")
     public PortfolioResponse createPortfolio(@Valid @RequestBody PortfolioCreateRequest request) {
         return portfolioService.createPortfolio(request);
     }
 
+    // 列出所有组合
     @GetMapping
     @Operation(summary = "List portfolios with pagination and sorting")
     public ResponseEntity<List<PortfolioResponse>> listPortfolios(
@@ -63,25 +65,27 @@ public class PortfolioController {
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
+    // 获取组合详情
     @GetMapping("/{id}")
     @Operation(summary = "Get a portfolio by id")
     public PortfolioResponse getPortfolio(@PathVariable Long id) {
         return portfolioService.getPortfolio(id);
     }
 
+    // 获取组合摘要（总持仓数和总成本）
     @GetMapping("/{id}/summary")
     @Operation(summary = "Get portfolio summary")
     public PortfolioSummaryResponse getSummary(@PathVariable Long id) {
         return portfolioService.getSummary(id);
     }
 
+    // 更新组合（支持部分更新）
     @PatchMapping("/{id}")
-    @Operation(summary = "Update portfolio name or base currency")
-    public PortfolioResponse updatePortfolio(@PathVariable Long id,
-                                             @Valid @RequestBody PortfolioUpdateRequest request) {
+    public PortfolioResponse updatePortfolio(@PathVariable Long id, @Valid @RequestBody PortfolioUpdateRequest request) {
         return portfolioService.updatePortfolio(id, request);
     }
 
+    // 删除组合及其所有关联的持仓
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete a portfolio and its positions")

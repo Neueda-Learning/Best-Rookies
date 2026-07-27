@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Allow local Vue dev server to call backend during development.
+        // 允许本地 Vue 开发服务器在开发时调用后端接口
         registry.addMapping("/api/**")
             .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")

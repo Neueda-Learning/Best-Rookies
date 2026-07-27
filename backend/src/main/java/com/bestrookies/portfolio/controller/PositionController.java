@@ -48,12 +48,14 @@ public class PositionController {
         this.positionService = positionService;
     }
 
+    // 创建新持仓
     @PostMapping
     @Operation(summary = "Create a position")
     public PositionResponse createPosition(@Valid @RequestBody PositionCreateRequest request) {
         return positionService.createPosition(request);
     }
 
+    // 列出所有或特定组合的持仓
     @GetMapping
     @Operation(summary = "List positions with optional portfolio filter and pagination")
     public ResponseEntity<List<PositionResponse>> listPositions(
@@ -64,12 +66,14 @@ public class PositionController {
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
+    // 部分更新持仓
     @PatchMapping("/{id}")
     @Operation(summary = "Update a position quantity or average cost")
     public PositionResponse updatePosition(@PathVariable Long id, @Valid @RequestBody PositionUpdateRequest request) {
         return positionService.updatePosition(id, request);
     }
 
+    // 删除持仓
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete a position")

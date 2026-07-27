@@ -5,9 +5,11 @@ spring:
     password: "${SPRING_DATASOURCE_PASSWORD:n3u3da!}"
   jpa:
     hibernate:
+      # 验证 DDL（需要数据库已存在）
       ddl-auto: validate
     open-in-view: false
   flyway:
+    # 启用 Flyway 数据库迁移
     enabled: true
 
 server:
