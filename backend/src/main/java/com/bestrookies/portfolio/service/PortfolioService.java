@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,15 +33,15 @@ public class PortfolioService {
     public PortfolioResponse createPortfolio(PortfolioCreateRequest request) {
         Portfolio portfolio = new Portfolio();
         portfolio.setName(request.name().trim());
-        portfolio.setBaseCurrency(request.baseCurrency().toUpperCase());
+        portfolio.setBaseCurrency(request.baseCurrency().trim().toUpperCase());
         portfolio.setCreatedAt(Instant.now());
         Portfolio saved = portfolioRepository.save(portfolio);
         return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
-    public List<PortfolioResponse> listPortfolios() {
-        return portfolioRepository.findAll().stream().map(this::toResponse).toList();
+    public Page<PortfolioResponse> listPortfolios(Pageable pageable) {
+        return portfolioRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +53,7 @@ public class PortfolioService {
     public PortfolioSummaryResponse getSummary(Long portfolioId) {
         // Summary is computed from persisted positions to keep logic centralized.
         Portfolio portfolio = getPortfolioEntity(portfolioId);
-        List<Position> positions = positionRepository.findByPortfolioIdOrderByIdAsc(portfolio.getId());
+        List<Position> positions = positionRepository.findByPortfolioId(portfolio.getId(), Pageable.unpaged()).getContent();
 
         BigDecimal totalCost = positions.stream()
             .map(p -> p.getQuantity().multiply(p.getAvgCost()))
@@ -68,7 +70,7 @@ public class PortfolioService {
             portfolio.setName(request.name().trim());
         }
         if (request.baseCurrency() != null && !request.baseCurrency().isBlank()) {
-            portfolio.setBaseCurrency(request.baseCurrency().toUpperCase());
+            portfolio.setBaseCurrency(request.baseCurrency().trim().toUpperCase());
         }
         return toResponse(portfolioRepository.save(portfolio));
     }
