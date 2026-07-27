@@ -3,6 +3,7 @@ package com.bestrookies.portfolio.service;
 import com.bestrookies.portfolio.dto.PortfolioCreateRequest;
 import com.bestrookies.portfolio.dto.PortfolioResponse;
 import com.bestrookies.portfolio.dto.PortfolioSummaryResponse;
+import com.bestrookies.portfolio.dto.PortfolioUpdateRequest;
 import com.bestrookies.portfolio.entity.Portfolio;
 import com.bestrookies.portfolio.entity.Position;
 import com.bestrookies.portfolio.exception.ResourceNotFoundException;
@@ -58,6 +59,24 @@ public class PortfolioService {
             .setScale(4, RoundingMode.HALF_UP);
 
         return new PortfolioSummaryResponse(portfolio.getId(), positions.size(), totalCost);
+    }
+
+    @Transactional
+    public PortfolioResponse updatePortfolio(Long portfolioId, PortfolioUpdateRequest request) {
+        Portfolio portfolio = getPortfolioEntity(portfolioId);
+        if (request.name() != null && !request.name().isBlank()) {
+            portfolio.setName(request.name().trim());
+        }
+        if (request.baseCurrency() != null && !request.baseCurrency().isBlank()) {
+            portfolio.setBaseCurrency(request.baseCurrency().toUpperCase());
+        }
+        return toResponse(portfolioRepository.save(portfolio));
+    }
+
+    @Transactional
+    public void deletePortfolio(Long portfolioId) {
+        Portfolio portfolio = getPortfolioEntity(portfolioId);
+        portfolioRepository.delete(portfolio);
     }
 
     @Transactional(readOnly = true)
