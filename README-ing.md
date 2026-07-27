@@ -18,10 +18,13 @@ This file compares current code in `Best-Rookies/` against requirements in `READ
 - List portfolios: `GET /api/v1/portfolios`.
 - Get portfolio detail: `GET /api/v1/portfolios/{id}`.
 - Portfolio summary (total positions + total cost): `GET /api/v1/portfolios/{id}/summary`.
+- **Update portfolio** (name/baseCurrency): `PATCH /api/v1/portfolios/{id}`. *(new)*
+- **Delete portfolio** (cascade): `DELETE /api/v1/portfolios/{id}`. *(new)*
 - Create position: `POST /api/v1/positions`.
 - List positions: `GET /api/v1/positions?portfolioId={id}`.
 - Delete position: `DELETE /api/v1/positions/{id}`.
 - Patch position: `PATCH /api/v1/positions/{id}`.
+- **Get latest price snapshot**: `GET /api/v1/prices/{ticker}/latest`. *(new)*
 
 Evidence:
 - `backend/src/main/java/com/bestrookies/portfolio/controller/PortfolioController.java`
@@ -42,10 +45,27 @@ Evidence:
 #### Persistence / DB
 - MySQL datasource configured.
 - Flyway migration for initial schema exists and is enabled.
+- Flyway migration V2: performance indexes on `positions(portfolio_id)` and `positions(ticker)`.
+- Flyway migration V3: `price_snapshots` table for storing market price data (supports performance/P&L calculation).
+- Flyway migration V4: `asset_type` column documented for extended enum values (ETF, FUND, CRYPTO).
+- `AssetType` enum extended with `ETF`, `FUND`, `CRYPTO` in addition to original `STOCK`, `BOND`, `CASH`.
+- `PATCH /api/v1/portfolios/{id}` implemented (name / baseCurrency update).
+- `DELETE /api/v1/portfolios/{id}` implemented (cascades to positions via JPA `CascadeType.ALL`).
+- `GET /api/v1/prices/{ticker}/latest` implemented — returns most recent price snapshot for a ticker.
+- Full backend layer added for price snapshots: `PriceSnapshot` entity, `PriceSnapshotRepository`, `PriceSnapshotService`, `PriceSnapshotController`.
 
 Evidence:
 - `backend/src/main/resources/application.yml`
 - `backend/src/main/resources/db/migration/V1__init_schema.sql`
+- `backend/src/main/resources/db/migration/V2__add_indexes.sql`
+- `backend/src/main/resources/db/migration/V3__add_price_snapshots.sql`
+- `backend/src/main/resources/db/migration/V4__extend_asset_type.sql`
+- `backend/src/main/java/com/bestrookies/portfolio/entity/AssetType.java`
+- `backend/src/main/java/com/bestrookies/portfolio/entity/PriceSnapshot.java`
+- `backend/src/main/java/com/bestrookies/portfolio/repository/PriceSnapshotRepository.java`
+- `backend/src/main/java/com/bestrookies/portfolio/service/PriceSnapshotService.java`
+- `backend/src/main/java/com/bestrookies/portfolio/controller/PriceSnapshotController.java`
+- `backend/src/main/java/com/bestrookies/portfolio/dto/PortfolioUpdateRequest.java`
 
 #### Testing baseline
 - Integration test covers create portfolio, create position, query summary.
@@ -63,9 +83,9 @@ Evidence:
 - Team workflow artifacts (branching/PR evidence) are not represented in repo docs.
 
 #### PROJECT-MVP.md next steps
-- `PUT/PATCH /portfolios/{id}` not implemented.
-- `DELETE /portfolios/{id}` not implemented.
-- Market data integration (Yahoo/sample API) not implemented.
+- ~~`PUT/PATCH /portfolios/{id}` not implemented.~~ **Done: `PATCH /api/v1/portfolios/{id}`.**
+- ~~`DELETE /portfolios/{id}` not implemented.~~ **Done: `DELETE /api/v1/portfolios/{id}`.**
+- Market data integration (Yahoo/sample API) not implemented — `price_snapshots` table and API endpoint ready; external fetch/scheduler not yet wired.
 - Frontend charts (performance/asset allocation) not implemented.
 - Swagger/OpenAPI not implemented.
 
@@ -88,10 +108,12 @@ Evidence:
 Completed ownership:
 - Portfolio create/list/detail/summary API.
 - Service-level summary calculation.
+- **`PATCH /api/v1/portfolios/{id}`** — name and baseCurrency update with PATCH semantics.
+- **`DELETE /api/v1/portfolios/{id}`** — cascades to all child positions.
 
 Remaining tasks:
-1. Implement `PATCH /api/v1/portfolios/{id}` (name/baseCurrency updates).
-2. Implement `DELETE /api/v1/portfolios/{id}` (with safe cascade rules).
+1. ~~Implement `PATCH /api/v1/portfolios/{id}`~~ **Done.**
+2. ~~Implement `DELETE /api/v1/portfolios/{id}`~~ **Done.**
 3. Add validations for update DTO and business error messages.
 4. Add integration tests for update/delete success and not-found cases.
 
@@ -121,12 +143,18 @@ Remaining tasks:
 Completed ownership:
 - Initial schema migration (`V1__init_schema.sql`).
 - Runtime datasource/flyway alignment.
+- **V2**: Performance indexes on `positions(portfolio_id)` and `positions(ticker)`.
+- **V3**: `price_snapshots` table with ticker/fetched_at indexes for market price storage.
+- **V4**: Column definition update documenting extended `AssetType` enum (ETF, FUND, CRYPTO).
+- **Full JPA backend layer** for `price_snapshots`: entity, repository, service, controller, DTO.
+- **`ON DELETE CASCADE`** cascade strategy implemented via JPA `CascadeType.ALL` on `Portfolio.positions`.
 
 Remaining tasks:
-1. Add migration for indexes and constraints tuning (e.g., ticker lookup, portfolio_id index review).
-2. Define deletion policy (`ON DELETE CASCADE` vs app-level restriction) and migrate accordingly.
+1. ~~Add migration for indexes and constraints tuning~~ **Done in V2.**
+2. ~~Define deletion policy and migrate accordingly~~ **Done via JPA cascade.**
 3. Add seed data migration/script for demo and testing.
 4. Document local DB bootstrap and environment-based credentials strategy.
+5. Wire external price fetch (Yahoo Finance / sample API) to `PriceSnapshotService.saveSnapshot()` via scheduled job (`@Scheduled`).
 
 ## Suggested Execution Order
 1. Backend A: portfolio update/delete APIs + tests.
