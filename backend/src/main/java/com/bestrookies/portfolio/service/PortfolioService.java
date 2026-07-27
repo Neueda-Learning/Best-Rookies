@@ -95,27 +95,4 @@ public class PortfolioService {
             portfolio.getCreatedAt()
         );
     }
-
-    @Transactional
-    public PortfolioResponse updatePortfolio(Long portfolioId, PortfolioUpdateRequest request) {
-        // 获取要更新的组合，如果不存在则抛出异常
-        Portfolio portfolio = getPortfolioEntity(portfolioId);
-
-        // 更新组合信息
-        portfolio.setName(request.name().trim());
-        portfolio.setBaseCurrency(request.baseCurrency().toUpperCase());
-
-        // 保存更新后的组合
-        Portfolio updated = portfolioRepository.save(portfolio);
-        return toResponse(updated);
-    }
-
-    @Transactional
-    public void deletePortfolio(Long portfolioId) {
-        // 获取要删除的组合，如果不存在则抛出异常
-        Portfolio portfolio = getPortfolioEntity(portfolioId);
-
-        // 删除组合（级联删除所有关联的持仓，由 JPA 的 orphanRemoval=true 自动处理）
-        portfolioRepository.delete(portfolio);
-    }
 }
