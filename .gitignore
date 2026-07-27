@@ -1,0 +1,18 @@
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend build outputs
+backend/target/
+
+# Frontend build outputs
+frontend/dist/
+frontend/node_modules/
+
+# Logs
+*.log
+
