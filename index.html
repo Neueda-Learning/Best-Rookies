@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best Rookies | Team Website</title>
+    <style>
+        :root {
+            --bg: #f6f1e8;
+            --surface: rgba(255, 251, 245, 0.92);
+            --surface-strong: #fffdf9;
+            --ink: #1e293b;
+            --muted: #5b6473;
+            --accent: #0f766e;
+            --accent-soft: #d7f3ee;
+            --accent-warm: #c96f3b;
+            --line: rgba(30, 41, 59, 0.08);
+            --shadow: 0 24px 60px rgba(53, 40, 24, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 32px;
+            color: var(--ink);
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(15, 118, 110, 0.22), transparent 28%),
+                radial-gradient(circle at 85% 15%, rgba(201, 111, 59, 0.18), transparent 20%),
+                linear-gradient(180deg, #f9f5ec 0%, #f3ede2 100%);
+        }
+
+        .page {
+            width: min(1120px, 100%);
+            margin: 0 auto;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(255, 253, 249, 0.95), rgba(242, 247, 246, 0.9));
+            box-shadow: var(--shadow);
+            isolation: isolate;
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            z-index: -1;
+            filter: blur(12px);
+        }
+
+        .hero::before {
+            width: 220px;
+            height: 220px;
+            top: -60px;
+            right: -30px;
+            background: rgba(15, 118, 110, 0.16);
+        }
+
+        .hero::after {
+            width: 180px;
+            height: 180px;
+            bottom: -70px;
+            left: -40px;
+            background: rgba(201, 111, 59, 0.16);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            margin-bottom: 20px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 0.9fr;
+            gap: 28px;
+            align-items: end;
+        }
+
+        h1 {
+            font-size: clamp(42px, 7vw, 78px);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin-bottom: 18px;
+        }
+
+        .hero p {
+            max-width: 62ch;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.8;
+        }
+
+        .hero-meta {
+            display: grid;
+            gap: 16px;
+        }
+
+        .meta-card {
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(10px);
+        }
+
+        .meta-card strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent-warm);
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .meta-card span {
+            font-size: 21px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .section {
+            margin-top: 28px;
+            padding: 34px;
+            border-radius: 26px;
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        .section-header p {
+            color: var(--muted);
+            max-width: 44ch;
+            line-height: 1.7;
+        }
+
+        .project-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+        }
+
+        .project-copy {
+            padding: 28px;
+            border-radius: 22px;
+            background: var(--surface-strong);
+            border: 1px solid var(--line);
+        }
+
+        .project-copy h3,
+        .feature-list h3 {
+            margin-bottom: 14px;
+            font-size: 22px;
+        }
+
+        .project-copy p {
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.9;
+        }
+
+        .feature-list {
+            padding: 28px;
+            border-radius: 22px;
+            color: #effcf8;
+            background: linear-gradient(160deg, #115e59 0%, #0f766e 100%);
+        }
+
+        .feature-list ul {
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .feature-list li {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.09);
+            line-height: 1.6;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .member-card {
+            position: relative;
+            padding: 22px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 247, 241, 0.96));
+            border: 1px solid var(--line);
+            overflow: hidden;
+            transition: transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 36px rgba(30, 41, 59, 0.12);
+        }
+
+        .member-card::after {
+            content: attr(data-initial);
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            font-size: 56px;
+            font-weight: 800;
+            color: rgba(15, 118, 110, 0.09);
+        }
+
+        .member-tag {
+            display: inline-block;
+            margin-bottom: 28px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .member-card h3 {
+            margin-bottom: 8px;
+            font-size: 28px;
+            letter-spacing: -0.03em;
+        }
+
+        .member-card p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .member-role {
+            color: var(--accent-warm);
+            font-weight: 700;
+        }
+
+        .footer {
+            padding: 28px 10px 8px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            animation: reveal 700ms ease forwards;
+        }
+
+        .reveal-delay-1 { animation-delay: 120ms; }
+        .reveal-delay-2 { animation-delay: 240ms; }
+        .reveal-delay-3 { animation-delay: 360ms; }
+
+        @keyframes reveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 920px) {
+            body {
+                padding: 18px;
+            }
+
+            .hero,
+            .section {
+                padding: 24px;
+            }
+
+            .hero-grid,
+            .project-layout,
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                align-items: start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="hero reveal">
+            <div class="eyebrow">Team Official Website</div>
+            <div class="hero-grid">
+                <div>
+                    <h1>Best Rookies</h1>
+                    <p>
+                        A compact team site for showcasing the portfolio_manager project,
+                        the product direction, and the people building it.
+                    </p>
+                </div>
+                <div class="hero-meta reveal reveal-delay-1">
+                    <article class="meta-card">
+                        <strong>Project</strong>
+                        <span>portfolio_manager</span>
+                    </article>
+                    <article class="meta-card">
+                        <strong>Focus</strong>
+                        <span>Investment portfolio tracking and risk visibility</span>
+                    </article>
+                </div>
+            </div>
+        </header>
+
+        <section class="section reveal reveal-delay-1" aria-labelledby="project-title">
+            <div class="section-header">
+                <div>
+                    <h2 id="project-title">Project Overview</h2>
+                </div>
+                <p>
+                    The page keeps your original content but presents it as a cleaner team landing page.
+                </p>
+            </div>
+            <div class="project-layout">
+                <article class="project-copy">
+                    <h3>portfolio_manager</h3>
+                    <p>
+                        Portfolio Manager is an investment portfolio management system. It supports asset entry, return tracking, and position analysis, helping users manage stocks, funds, and other investment products in one place while clearly viewing profit, loss, and diversification risk.
+                    </p>
+                </article>
+                <aside class="feature-list">
+                    <h3>Core Capabilities</h3>
+                    <ul>
+                        <li>Asset entry and centralized management for stocks, funds, and other investment products.</li>
+                        <li>Return statistics and profit-loss tracking for quick performance review.</li>
+                        <li>Position analysis and risk diversification views to support investment decisions.</li>
+                    </ul>
+                </aside>
+            </div>
+        </section>
+
+        <section class="section reveal reveal-delay-2" aria-labelledby="members-title">
+            <div class="section-header">
+                <div>
+                    <h2 id="members-title">Team Members</h2>
+                </div>
+                <p>
+                    A small cross-functional team covering product presentation, services, and data.
+                </p>
+            </div>
+            <div class="members-grid">
+                <article class="member-card" data-initial="L">
+                    <span class="member-tag">Frontend</span>
+                    <h3>Lemon</h3>
+                    <p class="member-role">Frontend Developer</p>
+                    <p>Builds the interface and shapes how project information is presented to users.</p>
+                </article>
+                <article class="member-card" data-initial="F">
+                    <span class="member-tag">Backend</span>
+                    <h3>Finn</h3>
+                    <p class="member-role">Backend Developer</p>
+                    <p>Implements service logic and supports the system workflow behind portfolio operations.</p>
+                </article>
+                <article class="member-card" data-initial="S">
+                    <span class="member-tag">Backend</span>
+                    <h3>Scarlett</h3>
+                    <p class="member-role">Backend Developer</p>
+                    <p>Works on core server-side features for asset management and analytics support.</p>
+                </article>
+                <article class="member-card" data-initial="P">
+                    <span class="member-tag">Database</span>
+                    <h3>Pyke</h3>
+                    <p class="member-role">Database Engineer</p>
+                    <p>Designs the data layer and keeps portfolio records structured, consistent, and queryable.</p>
+                </article>
+            </div>
+        </section>
+
+        <footer class="footer reveal reveal-delay-3">
+            Best Rookies team showcase page for the portfolio_manager course project.
+        </footer>
+    </main>
+</body>
+</html>

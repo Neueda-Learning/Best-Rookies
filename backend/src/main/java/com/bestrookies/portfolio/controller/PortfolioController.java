@@ -3,14 +3,19 @@ package com.bestrookies.portfolio.controller;
 import com.bestrookies.portfolio.dto.PortfolioCreateRequest;
 import com.bestrookies.portfolio.dto.PortfolioResponse;
 import com.bestrookies.portfolio.dto.PortfolioSummaryResponse;
+import com.bestrookies.portfolio.dto.PortfolioUpdateRequest;
 import com.bestrookies.portfolio.service.PortfolioService;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,24 +28,41 @@ public class PortfolioController {
         this.portfolioService = portfolioService;
     }
 
+    // 创建新组合
     @PostMapping
     public PortfolioResponse createPortfolio(@Valid @RequestBody PortfolioCreateRequest request) {
         return portfolioService.createPortfolio(request);
     }
 
+    // 列出所有组合
     @GetMapping
     public List<PortfolioResponse> listPortfolios() {
         return portfolioService.listPortfolios();
     }
 
+    // 获取组合详情
     @GetMapping("/{id}")
     public PortfolioResponse getPortfolio(@PathVariable Long id) {
         return portfolioService.getPortfolio(id);
     }
 
+    // 获取组合摘要（总持仓数和总成本）
     @GetMapping("/{id}/summary")
     public PortfolioSummaryResponse getSummary(@PathVariable Long id) {
         return portfolioService.getSummary(id);
+    }
+
+    // 更新组合（支持部分更新）
+    @PatchMapping("/{id}")
+    public PortfolioResponse updatePortfolio(@PathVariable Long id, @Valid @RequestBody PortfolioUpdateRequest request) {
+        return portfolioService.updatePortfolio(id, request);
+    }
+
+    // 删除组合及其所有关联的持仓
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePortfolio(@PathVariable Long id) {
+        portfolioService.deletePortfolio(id);
     }
 }
 
