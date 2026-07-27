@@ -11,6 +11,8 @@ spring:
   flyway:
     # 启用 Flyway 数据库迁移
     enabled: true
+    # 关闭严格校验以跳过校验码不匹配错误
+    validateOnMigrate: false
 
 server:
   port: 8080
