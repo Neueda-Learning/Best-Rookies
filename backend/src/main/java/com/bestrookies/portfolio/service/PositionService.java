@@ -9,6 +9,8 @@ import com.bestrookies.portfolio.exception.ResourceNotFoundException;
 import com.bestrookies.portfolio.repository.PositionRepository;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,19 +35,19 @@ public class PositionService {
         position.setTicker(request.ticker().toUpperCase().trim());
         position.setQuantity(request.quantity());
         position.setAvgCost(request.avgCost());
-        position.setCurrency(request.currency().toUpperCase());
+        position.setCurrency(request.currency().trim().toUpperCase());
         position.setUpdatedAt(Instant.now());
 
         return toResponse(positionRepository.save(position));
     }
 
     @Transactional(readOnly = true)
-    public List<PositionResponse> listPositions(Long portfolioId) {
-        List<Position> positions = portfolioId == null
-            ? positionRepository.findAll()
-            : positionRepository.findByPortfolioIdOrderByIdAsc(portfolioId);
+    public Page<PositionResponse> listPositions(Long portfolioId, Pageable pageable) {
+        Page<Position> positions = portfolioId == null
+            ? positionRepository.findAll(pageable)
+            : positionRepository.findByPortfolioId(portfolioId, pageable);
 
-        return positions.stream().map(this::toResponse).toList();
+        return positions.map(this::toResponse);
     }
 
     @Transactional

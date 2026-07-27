@@ -4,8 +4,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasSize;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
@@ -19,6 +21,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class PortfolioApiIntegrationTest {
 
     @Autowired
@@ -34,21 +37,71 @@ class PortfolioApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\": \"My First Portfolio\", \"baseCurrency\": \"USD\"}"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").isNumber());
+            .andExpect(jsonPath("$.id").value(portfolioId))
+            .andExpect(jsonPath("$.name").value("Growth Updated"))
+            .andExpect(jsonPath("$.baseCurrency").value("EUR"));
+    }
 
         // 2) 添加持仓
         mockMvc.perform(post("/api/v1/positions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"portfolioId\": 1, \"assetType\": \"STOCK\", \"ticker\": \"AAPL\", \"quantity\": 10, \"avgCost\": 150, \"currency\": \"USD\"}"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.ticker").value("AAPL"));
+            .andExpect(header().string("X-Total-Elements", "3"))
+            .andExpect(header().string("X-Total-Pages", "2"))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$[0].name").value("Alpha"))
+            .andExpect(jsonPath("$[1].name").value("Bravo"));
+    }
+
+    @Test
+    void shouldReturnPaginatedSortedPositionsForPortfolio() throws Exception {
+        long portfolioId = createPortfolio("Positions", "USD");
+
+        mockMvc.perform(post("/api/v1/positions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(positionJson(portfolioId, "STOCK", "ZZZ", "5", "100", "USD")))
+            .andExpect(status().isOk());
 
         // 3) 验证摘要反映总成本 = 10 * 150 = 1500
         mockMvc.perform(get("/api/v1/portfolios/1/summary"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.portfolioId").value(1))
-            .andExpect(jsonPath("$.totalPositions").value(1))
-            .andExpect(jsonPath("$.totalCost").value(1500.0000));
+            .andExpect(header().string("X-Total-Elements", "2"))
+            .andExpect(jsonPath("$", hasSize(1)))
+            .andExpect(jsonPath("$[0].ticker").value("AAA"));
+    }
+
+    private long createPortfolio(String name, String baseCurrency) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/portfolios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(portfolioJson(name, baseCurrency)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").isNumber())
+            .andReturn();
+
+        return ((Number) JsonPath.read(result.getResponse().getContentAsString(), "$.id")).longValue();
+    }
+
+    private String portfolioJson(String name, String baseCurrency) {
+        return """
+            {
+              "name": "%s",
+              "baseCurrency": "%s"
+            }
+            """.formatted(name, baseCurrency);
+    }
+
+    private String positionJson(Long portfolioId, String assetType, String ticker, String quantity, String avgCost, String currency) {
+        return """
+            {
+              "portfolioId": %d,
+              "assetType": "%s",
+              "ticker": "%s",
+              "quantity": %s,
+              "avgCost": %s,
+              "currency": "%s"
+            }
+            """.formatted(portfolioId, assetType, ticker, quantity, avgCost, currency);
     }
 
     @Test

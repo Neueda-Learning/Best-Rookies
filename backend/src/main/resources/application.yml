@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/portfolio_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: "n3u3da!"
+    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/portfolio_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}"
+    username: "${SPRING_DATASOURCE_USERNAME:root}"
+    password: "${SPRING_DATASOURCE_PASSWORD:n3u3da!}"
   jpa:
     hibernate:
       # 验证 DDL（需要数据库已存在）
