@@ -101,4 +101,12 @@ export function formatShortDate(value) {
     month: 'short',
     day: 'numeric'
   }).format(date)
+}/**
+ * 格式化收益率百分比，例如 12.5 => "+12.50%"，-3.2 => "-3.20%"
+ * @param {number|string} value 收益率数值（已为百分比，无需再乘 100）
+ */
+export function formatPercent(value) {
+  const num = toNumber(value)
+  const sign = num > 0 ? '+' : ''
+  return `${sign}${num.toFixed(2)}%`
 }

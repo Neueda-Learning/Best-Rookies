@@ -210,12 +210,13 @@ const showCreatePanel = computed(() => isCreatePanelOpen.value || !portfolios.va
 const portfolioCards = computed(() => {
   return sortedPortfolios.value.map((item) => {
     const insight = portfolioInsights.value[item.id] || {}
+    const summaryCurrency = insight.summaryCurrency || 'USD'
 
     return {
       ...item,
       code: `PF-${String(item.id).padStart(3, '0')}`,
       totalPositions: insight.totalPositions ?? 0,
-      totalCostLabel: formatCurrency(insight.totalCost ?? 0, item.baseCurrency || 'USD'),
+      totalCostLabel: formatCurrency(insight.totalCost ?? 0, summaryCurrency),
       createdLabel: formatDisplayDate(item.createdAt),
       lastActivityLabel: insight.lastActivity ? formatRelativeDate(insight.lastActivity) : t('noActivityYet')
     }
@@ -306,12 +307,14 @@ async function buildPortfolioInsights(items) {
         return [item.id, {
           totalPositions: Number(summaryRes.data?.totalPositions || 0),
           totalCost: Number(summaryRes.data?.totalCost || 0),
+          summaryCurrency: summaryRes.data?.baseCurrency || 'USD',
           lastActivity
         }]
       } catch {
         return [item.id, {
           totalPositions: 0,
           totalCost: 0,
+          summaryCurrency: 'USD',
           lastActivity: ''
         }]
       }
