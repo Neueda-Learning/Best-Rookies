@@ -125,5 +125,30 @@ class PortfolioApiIntegrationTest {
                 .content("{\"name\": \"\", \"baseCurrency\": \"USD\"}"))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void shouldConvertEurCostToUsdInSummary() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/v1/portfolios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"FX Portfolio\", \"baseCurrency\": \"USD\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        Map<String, Object> responseBody = objectMapper.readValue(createResult.getResponse().getContentAsString(), Map.class);
+        Long portfolioId = ((Number) responseBody.get("id")).longValue();
+
+        // 固定汇率：1 USD = 0.88 EUR，因此 1 EUR = 1 / 0.88 USD。
+        // 1 股 * 88 EUR => 100 USD（四舍五入后 100.0000）。
+        mockMvc.perform(post("/api/v1/positions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"portfolioId\": " + portfolioId + ", \"assetType\": \"STOCK\", \"ticker\": \"SAP\", \"quantity\": 1, \"avgCost\": 88, \"currency\": \"EUR\"}"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/portfolios/" + portfolioId + "/summary"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.baseCurrency").value("USD"))
+            .andExpect(jsonPath("$.totalCost").value(100.0000))
+            .andExpect(jsonPath("$.marketValue").value(100.0000));
+    }
 }
 
