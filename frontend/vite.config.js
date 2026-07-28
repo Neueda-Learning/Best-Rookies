@@ -1,3 +1,4 @@
+// 此文件是 Vite 构建配置，用于定义 Vue 插件和本地开发服务器参数。
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
