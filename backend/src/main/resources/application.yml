@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/portfolio_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}"
+    # 首次本地启动时自动创建默认库，避免 Unknown database 错误
+    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/portfolio_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}"
     username: "${SPRING_DATASOURCE_USERNAME:root}"
     password: "${SPRING_DATASOURCE_PASSWORD:n3u3da!}"
   jpa:
@@ -15,5 +16,5 @@ spring:
     validateOnMigrate: false
 
 server:
-  port: 8080
-
+  # 可通过 SERVER_PORT 覆盖，避免本地端口冲突
+  port: "${SERVER_PORT:8080}"
