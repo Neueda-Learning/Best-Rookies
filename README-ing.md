@@ -1,143 +1,160 @@
-# README-ing（实现进度检查）
+# README-ing（实现进度检查 v2）
 
 ## 范围
-本文件对比 `Best-Rookies/` 中的当前代码与 `README.md` 和 `PROJECT-MVP.md` 中的需求。
+本文件对比 `Best-Rookies/` 当前代码与 `README.md`、`PROJECT-MVP.md` 的需求，并给出后续优化方向。
 
-## 快速健康检查（已验证）
-- 后端测试：`backend` 通过 `mvn test` 测试。
-- 前端构建：`frontend` 通过 `npm run build` 构建。
-- 清理冗余输出：`backend/target/`、`frontend/dist/`、`.idea/`。
-- 添加忽略规则：`.gitignore`。
+## 当前验证状态
+- 后端：`mvn test` 可通过（本地最近一次验证时间：2026-07-28）。
+- 前端：存在完整 Vue 页面与组件结构，可执行 `npm run build` / `npm run dev` 进行验证。
 
-## 需求对比
+## 需求对比（按当前代码）
 
-### 已完成的需求
+### 已完成
 
-#### 核心 API（保存和检索组合记录）
-- 创建组合：`POST /api/v1/portfolios`。
-- 列出组合：`GET /api/v1/portfolios`。
-- 获取组合详情：`GET /api/v1/portfolios/{id}`。
-- 组合摘要（总持仓数 + 总成本）：`GET /api/v1/portfolios/{id}/summary`。
-- 创建持仓：`POST /api/v1/positions`。
-- 列出持仓：`GET /api/v1/positions?portfolioId={id}`。
-- 删除持仓：`DELETE /api/v1/positions/{id}`。
-- 更新持仓：`PATCH /api/v1/positions/{id}`。
+#### 1) 核心 REST API 闭环
+- 组合：创建、列表、详情、摘要、更新、删除。
+- 持仓：创建、列表、更新、删除。
 
 证据：
 - `backend/src/main/java/com/bestrookies/portfolio/controller/PortfolioController.java`
 - `backend/src/main/java/com/bestrookies/portfolio/controller/PositionController.java`
 - `backend/src/main/java/com/bestrookies/portfolio/service/PortfolioService.java`
+- `backend/src/main/java/com/bestrookies/portfolio/service/PositionService.java`
 
-#### 前端最小工作流
-- 浏览组合。
-- 打开组合详情。
-- 添加持仓。
-- 删除持仓。
+#### 2) 列表分页与排序（后端）
+- `GET /api/v1/portfolios`、`GET /api/v1/positions` 已支持 `Pageable`。
+- 返回分页响应头（`X-Page-Number`、`X-Total-Elements` 等）。
+
+证据：
+- `backend/src/main/java/com/bestrookies/portfolio/controller/PortfolioController.java`
+- `backend/src/main/java/com/bestrookies/portfolio/controller/PositionController.java`
+- `backend/src/main/java/com/bestrookies/portfolio/controller/PaginationHeaders.java`
+
+#### 3) OpenAPI/Swagger 基础接入
+- 已引入 Springdoc 依赖。
+- 控制器已有 `@Tag`、`@Operation`、`@ApiResponses` 注解。
+
+证据：
+- `backend/pom.xml`
+- `backend/src/main/java/com/bestrookies/portfolio/controller/PortfolioController.java`
+- `backend/src/main/java/com/bestrookies/portfolio/controller/PositionController.java`
+
+#### 4) 前端最小工作流 + 基础图表
+- 已实现组合浏览、详情、添加持仓、删除持仓。
+- 已实现资产占比环图与基线趋势图。
 
 证据：
 - `frontend/src/views/PortfolioListView.vue`
 - `frontend/src/views/PortfolioDetailView.vue`
 - `frontend/src/components/PositionForm.vue`
+- `frontend/src/components/AllocationDonutChart.vue`
+- `frontend/src/components/TrendLineChart.vue`
 
-#### 数据持久化 / 数据库
-- MySQL 数据源已配置。
-- Flyway 初始化迁移脚本存在且已启用。
+#### 5) 数据库与迁移
+- MySQL 数据源配置完成。
+- Flyway `V1~V4` 迁移已存在（含索引和价格快照表）。
 
 证据：
 - `backend/src/main/resources/application.yml`
 - `backend/src/main/resources/db/migration/V1__init_schema.sql`
+- `backend/src/main/resources/db/migration/V2__add_indexes.sql`
+- `backend/src/main/resources/db/migration/V3__add_price_snapshots.sql`
+- `backend/src/main/resources/db/migration/V4__extend_asset_type.sql`
 
-#### 测试基线
-- 集成测试包含创建组合、创建持仓、查询摘要。
+### 部分完成
+
+#### 1) 行情基础对接
+- 已有外部行情获取服务和价格快照落库能力。
+- 但缺少独立行情 API、调度刷新策略、失败重试和可观测性指标。
 
 证据：
-- `backend/src/test/java/com/bestrookies/portfolio/PortfolioApiIntegrationTest.java`
+- `backend/src/main/java/com/bestrookies/portfolio/service/MarketPriceService.java`
+- `backend/src/main/java/com/bestrookies/portfolio/service/PriceSnapshotService.java`
 
-### 未完成 / 部分完成的需求
+#### 2) 完整收益计算
+- `summary` 已返回 `marketValue`、`unrealizedPnL`。
+- 当前估值存在回退逻辑（取不到行情时使用 `avgCost`），仍属于“基础收益计算”，不是完整收益体系。
 
-#### README.md（高优先级前端目标）
-- 组合性能可视化（图表）未实现。
+证据：
+- `backend/src/main/java/com/bestrookies/portfolio/dto/PortfolioSummaryResponse.java`
+- `backend/src/main/java/com/bestrookies/portfolio/service/PortfolioService.java`
 
-#### README.md（推荐工程目标）
-- API 使用文档（Swagger/OpenAPI）未实现。
-- 团队工作流产物（分支/PR 证据）未在仓库文档中体现。
+#### 3) API 文档质量
+- 已有 Swagger 基础接入。
+- 仍缺少统一示例请求/响应、错误码约定页、分页参数说明页。
 
-#### PROJECT-MVP.md 后续步骤
-- `PUT/PATCH /portfolios/{id}` 未实现。
-- `DELETE /portfolios/{id}` 未实现。
-- 行情数据集成（Yahoo/样例 API）未实现。
-- 前端图表（性能/资产占比）未实现。
-- Swagger/OpenAPI 未实现。
+### 未完成
 
-#### 拉伸目标（README 附录 E）
-- AI 功能：未实现。
+#### 1) README 工程协作要求
+- 仓库文档中缺少分支策略、PR 证据、评审流程记录。
+
+#### 2) 前端组合编辑/删除能力
+- 后端接口已具备，前端尚未提供组合级编辑/删除入口。
+
+#### 3) README 附录 E（拉伸目标）
+- AI 能力：未实现。
 - 量子计算原型：未实现。
 
-## 本次检查修复的代码问题
-- 更新开发环境 CORS 规则，支持 `localhost` 和 `127.0.0.1` 的灵活端口：
-  - `backend/src/main/java/com/bestrookies/portfolio/config/WebConfig.java`
-- 添加根目录 `.gitignore` 以避免提交生成的产物。
-- 删除工作区中冗余生成的目录：
-  - `backend/target/`
-  - `frontend/dist/`
-  - `.idea/`
-
-## 4 人工作分工（已完成 + 待完成）
+## 4 人工作分工（已完成 + 下一步）
 
 ### 后端工程师 A（组合领域）
-已完成职责：
-- 组合创建/列出/详情/摘要 API。
-- 服务层摘要计算。
-- ✅ **PATCH /api/v1/portfolios/{id}**（名称/基础币种更新）。
-- ✅ **DELETE /api/v1/portfolios/{id}**（级联删除所有关联持仓）。
-- ✅ 为更新 DTO 添加验证和业务错误消息。
-- ✅ 添加了 6 个集成测试覆盖所有场景（创建、更新、删除、验证、异常）。
+已完成：
+- 组合 CRUD（含 `PATCH` / `DELETE`）与摘要接口。
+- 更新参数校验与异常路径测试。
 
-证据：
-- `backend/src/main/java/.../dto/PortfolioUpdateRequest.java`（新建）
-- `backend/src/main/java/.../service/PortfolioService.java`（新增 updatePortfolio、deletePortfolio 方法）
-- `backend/src/main/java/.../controller/PortfolioController.java`（新增 @PatchMapping、@DeleteMapping）
-- `backend/src/test/java/.../PortfolioApiIntegrationTest.java`（升级至 6 个测试用例）
+下一步建议（优化类）：
+1. 为组合删除增加“软删除或保护策略”评估文档。
+2. 为组合更新补充幂等性与并发更新策略（如版本号）。
 
-待完成任务：
-无（已全部完成）✅
+### 后端工程师 B（持仓 + API 质量 + 行情）
+已完成：
+- 持仓 CRUD、分页接口基础、Swagger 注解基础。
+- 行情服务基础接入（外部拉取 + 快照存储）。
 
-### 后端工程师 B（持仓 + API 质量）
-已完成职责：
-- 持仓创建/列出/更新/删除 API。
-- 全局异常处理基线。
-
-待完成任务：
-1. 为列表端点添加分页/排序。
-2. 为所有端点引入 OpenAPI/Swagger 文档。
-3. 添加端点级示例和标准化错误响应模式文档。
-4. 为无效负载和验证边界条件添加测试用例。
+下一步建议（主责）：
+1. 完成“完整收益计算”规则（汇率、缺失行情处理、口径统一）。
+2. 增加行情刷新任务（定时拉取、重试、熔断、限流）。
+3. 完善 OpenAPI 文档（示例、错误码、分页参数）。
+4. 补强负载与边界测试（无行情、脏数据、并发写入）。
 
 ### 前端工程师（Vue UI）
-已完成职责：
-- 组合列表和详情页面。
-- 与后端的持仓创建/删除交互。
+已完成：
+- 组合列表/详情、持仓新增删除、基础图表与状态面板。
 
-待完成任务：
-1. 为所有异步调用添加错误处理/加载/空状态。
-2. 实现性能和资产占比图表。
-3. 在后端端点就绪后添加组合编辑/删除 UI。
-4. 改进表单验证和用户反馈（提示/内联错误）。
+下一步建议：
+1. 接入组合编辑/删除 UI（对齐后端接口）。
+2. 区分“成本趋势”与“真实收益趋势”图例与提示。
+3. 加入分页参数联动（当前/总页数、下一页加载）。
 
 ### 数据库工程师（MySQL + 迁移）
-已完成职责：
-- 初始化架构迁移（`V1__init_schema.sql`）。
-- 运行时数据源/Flyway 对齐。
+已完成：
+- 初始化表结构、索引、价格快照表、资产类型扩展迁移。
 
-待完成任务：
-1. 为索引和约束优化添加迁移（例如 Ticker 查询、portfolio_id 索引审查）。
-2. 定义删除政策（`ON DELETE CASCADE` vs 应用层限制）并相应迁移。
-3. 添加演示数据迁移/脚本供演示和测试使用。
-4. 记录本地数据库启动和基于环境的凭证策略。
+下一步建议：
+1. 为快照表增加唯一性与去重策略（ticker + time bucket）。
+2. 评估高频写入下的索引与归档策略。
+3. 准备演示数据脚本与环境化凭证模板（dev/test/prod）。
 
-## 建议执行顺序
-1. 后端 A：组合更新/删除 API + 测试。
-2. 数据库：删除/索引策略迁移。
-3. 后端 B：Swagger/OpenAPI + 验证测试强化。
-4. 前端：编辑/删除组合 + 图表 + UX 状态。
+## 可优化功能清单（优先级）
+
+### P0（优先马上做）
+1. 完整收益计算口径统一：成本、现值、未实现收益、收益率。
+2. 前端接入组合编辑/删除，补全 MVP 操作闭环。
+3. OpenAPI 文档补齐示例与错误码说明，便于联调和演示。
+
+### P1（本周可推进）
+1. 行情抓取任务化（定时刷新 + 重试 + 限流）。
+2. 前端分页交互（列表接口已支持分页，UI 需承接）。
+3. 增加监控日志字段（请求耗时、外部行情成功率、回退命中率）。
+
+### P2（演示增强）
+1. 导出 CSV/分享功能从“占位按钮”升级为真实功能。
+2. 增加历史收益曲线（基于 `price_snapshots`）。
+3. AI/量子附录做最小 PoC（哪怕是 notebook 级演示）。
+
+## 建议执行顺序（更新）
+1. 后端 B + 数据库：完成完整收益计算与行情刷新链路。
+2. 前端：接入组合编辑/删除与真实收益图表口径。
+3. 后端 B：补 OpenAPI 细节与边界测试。
+4. 全员：补齐分支/PR 文档证据与演示材料。
 

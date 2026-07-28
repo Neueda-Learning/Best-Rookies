@@ -1,176 +1,90 @@
-<!-- 此文件是投资组合详情页，用于展示组合摘要、图表和持仓列表。 -->
+﻿<!-- 此文件是投资组合详情页，用于展示组合摘要、图表和持仓列表。 -->
 <template>
   <section class="page-section">
     <div class="detail-breadcrumbs">
-      <button type="button" class="link-button" @click="goBack">{{ t('detailBreadcrumbHome') }}</button>
+      <button type="button" class="link-button" @click="goBack">{{ t("detailBreadcrumbHome") }}</button>
       <span>/</span>
-      <span>{{ portfolio?.name || t('detailHeroFallbackTitle') }}</span>
+      <span>{{ portfolio?.name || t("detailHeroFallbackTitle") }}</span>
     </div>
-
     <div class="page-heading page-heading--detail">
       <div>
-        <button type="button" class="back-link" @click="goBack">&larr; {{ t('buttonBackToPortfolios') }}</button>
-        <h2>{{ portfolio?.name || t('detailHeroFallbackTitle') }}</h2>
+        <button type="button" class="back-link" @click="goBack">&larr; {{ t("buttonBackToPortfolios") }}</button>
+        <h2>{{ portfolio?.name || t("detailHeroFallbackTitle") }}</h2>
         <div v-if="portfolio" class="detail-heading__meta">
           <span>{{ portfolioCode }}</span>
           <span>{{ formatDisplayDate(portfolio.createdAt) }}</span>
           <span class="token-chip">{{ portfolio.baseCurrency }}</span>
         </div>
       </div>
-
       <div class="page-heading__actions">
         <button type="button" class="button button--secondary" :disabled="isLoading" @click="reload">
-          {{ isLoading ? t('buttonRefreshing') : t('buttonRefreshPortfolio') }}
+          {{ isLoading ? t("buttonRefreshing") : t("buttonRefreshPortfolio") }}
         </button>
       </div>
     </div>
-
-    <StatusPanel
-      v-if="isLoading"
-      variant="loading"
-      :title="t('statusLoadingPortfolioTitle')"
-      :message="t('statusLoadingPortfolioMessage')"
-    />
-
-    <StatusPanel
-      v-else-if="loadError"
-      variant="error"
-      :title="t('statusLoadPortfolioErrorTitle')"
-      :message="loadError"
-      :action-label="t('actionRetry')"
-      @action="reload"
-    />
-
+    <StatusPanel v-if="isLoading" variant="loading" :title="t('statusLoadingPortfolioTitle')" :message="t('statusLoadingPortfolioMessage')" />
+    <StatusPanel v-else-if="loadError" variant="error" :title="t('statusLoadPortfolioErrorTitle')" :message="loadError" :action-label="t('actionRetry')" @action="reload" />
     <template v-else-if="portfolio">
       <div class="summary-grid summary-grid--detail">
         <MetricCard :label="t('metricPositions')" :value="String(summary.totalPositions)" tone="indigo" badge="POS" :hint="t('metricPositionsHint')" />
-        <MetricCard :label="t('metricInvestedCost')" :value="formatCurrency(summary.totalCost, portfolio.baseCurrency)" tone="mint" badge="USD" :hint="t('metricInvestedCostHint')" />
-        <MetricCard :label="t('metricUniqueTickers')" :value="String(uniqueTickers)" tone="gold" badge="TK" :hint="t('metricUniqueTickersHint')" />
+        <MetricCard :label="t('metricInvestedCost')" :value="formatCurrency(summary.totalCost, summaryBaseCurrency)" tone="mint" badge="COST" :hint="t('metricInvestedCostHint')" />
+        <MetricCard :label="t('metricMarketValue')" :value="formatCurrency(summary.marketValue, summaryBaseCurrency)" tone="gold" badge="MKT" :hint="t('metricMarketValueHint')" />
+        <MetricCard :label="t('metricUnrealizedPnl')" :value="formatCurrency(summary.unrealizedPnL, summaryBaseCurrency)" :tone="pnlTone" badge="PNL" :hint="t('metricUnrealizedPnlHint')" />
+        <MetricCard :label="t('metricReturnRate')" :value="formatPercent(summary.returnRate)" :tone="pnlTone" badge="%" :hint="t('metricReturnRateHint')" />
+        <MetricCard :label="t('metricDataQuality')" :value="dataQualityLabel" tone="silver" badge="SRC" :hint="t('metricDataQualityHint')" />
+        <MetricCard :label="t('metricUniqueTickers')" :value="String(uniqueTickers)" tone="silver" badge="TK" :hint="t('metricUniqueTickersHint')" />
         <MetricCard :label="t('metricLastActivity')" :value="latestActivity" tone="silver" badge="ACT" :hint="t('metricLastActivityHint')" />
       </div>
-
       <div class="detail-layout-grid">
         <div class="card">
-          <div class="section-heading">
-            <div>
-              <h3>{{ t('detailAssetAllocation') }}</h3>
-              <p>{{ t('detailAssetAllocationDescription') }}</p>
-            </div>
-          </div>
-
-          <StatusPanel
-            v-if="!allocationSeries.length"
-            variant="empty"
-            :title="t('statusNoAllocationTitle')"
-            :message="t('statusNoAllocationMessage')"
-          />
-
-          <AllocationDonutChart
-            v-else
-            :segments="allocationSeries"
-            :total-value="summary.totalCost"
-            :currency="portfolio.baseCurrency"
-          />
+          <div class="section-heading"><div><h3>{{ t("detailAssetAllocation") }}</h3><p>{{ t("detailAssetAllocationDescription") }}</p></div></div>
+          <StatusPanel v-if="!allocationSeries.length" variant="empty" :title="t('statusNoAllocationTitle')" :message="t('statusNoAllocationMessage')" />
+          <AllocationDonutChart v-else :segments="allocationSeries" :total-value="summary.totalCost" :currency="portfolio.baseCurrency" />
         </div>
-
         <div class="card">
-          <div class="section-heading">
-            <div>
-              <h3>{{ t('detailPerformanceBaseline') }}</h3>
-              <p>{{ t('detailPerformanceDescription') }}</p>
-            </div>
-          </div>
-
-          <StatusPanel
-            v-if="!investedTrend.length"
-            variant="empty"
-            :title="t('statusNoTrendTitle')"
-            :message="t('statusNoTrendMessage')"
-          />
-
+          <div class="section-heading"><div><h3>{{ t("detailPerformanceBaseline") }}</h3><p>{{ t("detailPerformanceDescription") }}</p></div></div>
+          <StatusPanel v-if="!investedTrend.length" variant="empty" :title="t('statusNoTrendTitle')" :message="t('statusNoTrendMessage')" />
           <TrendLineChart v-else :points="investedTrend" :currency="portfolio.baseCurrency" />
         </div>
-
         <div class="detail-sidebar">
           <article class="card info-card">
-            <p class="eyebrow">{{ t('detailAboutPortfolio') }}</p>
+            <p class="eyebrow">{{ t("detailAboutPortfolio") }}</p>
             <div class="info-list">
-              <div class="info-list__row">
-                <span>{{ t('fieldPortfolioName') }}</span>
-                <strong>{{ portfolio.name }}</strong>
-              </div>
-              <div class="info-list__row">
-                <span>{{ t('tableId') }}</span>
-                <strong>{{ portfolioCode }}</strong>
-              </div>
-              <div class="info-list__row">
-                <span>{{ t('fieldBaseCurrency') }}</span>
-                <strong>{{ portfolio.baseCurrency }}</strong>
-              </div>
-              <div class="info-list__row">
-                <span>{{ t('listCardCreated') }}</span>
-                <strong>{{ formatDisplayDate(portfolio.createdAt) }}</strong>
-              </div>
+              <div class="info-list__row"><span>{{ t("fieldPortfolioName") }}</span><strong>{{ portfolio.name }}</strong></div>
+              <div class="info-list__row"><span>{{ t("tableId") }}</span><strong>{{ portfolioCode }}</strong></div>
+              <div class="info-list__row"><span>{{ t("fieldBaseCurrency") }}</span><strong>{{ portfolio.baseCurrency }}</strong></div>
+              <div class="info-list__row"><span>{{ t("listCardCreated") }}</span><strong>{{ formatDisplayDate(portfolio.createdAt) }}</strong></div>
             </div>
           </article>
-
           <article class="card info-card">
-            <p class="eyebrow">{{ t('detailDataNotes') }}</p>
-            <ul class="note-list note-list--compact">
-              <li>{{ t('detailNoteFormula') }}</li>
-              <li>{{ t('detailNoteBaseCurrency') }}</li>
-            </ul>
+            <p class="eyebrow">{{ t("detailDataNotes") }}</p>
+            <ul class="note-list note-list--compact"><li>{{ t("detailNoteFormula") }}</li><li>{{ t("detailNoteBaseCurrency") }}</li></ul>
           </article>
-
           <article class="card info-card">
-            <p class="eyebrow">{{ t('detailQuickActions') }}</p>
+            <p class="eyebrow">{{ t("detailQuickActions") }}</p>
             <div class="quick-actions">
-              <button type="button" class="button button--ghost button--block" @click="notifyPortfolioActionsUnavailable">
-                {{ t('actionExportCsv') }}
-              </button>
-              <button type="button" class="button button--ghost button--block" @click="notifyPortfolioActionsUnavailable">
-                {{ t('actionSharePortfolio') }}
-              </button>
+              <button type="button" class="button button--ghost button--block" @click="notifyPortfolioActionsUnavailable">{{ t("actionExportCsv") }}</button>
+              <button type="button" class="button button--ghost button--block" @click="notifyPortfolioActionsUnavailable">{{ t("actionSharePortfolio") }}</button>
             </div>
           </article>
         </div>
       </div>
-
       <div class="card holdings-card">
         <div class="section-heading section-heading--tight">
-          <div>
-            <h3>{{ t('detailHoldingsTitle') }} <span class="count-badge">{{ positions.length }}</span></h3>
-          </div>
-
-          <button type="button" class="button button--ghost" @click="showPositionForm = !showPositionForm">
-            + {{ t('buttonAddPosition') }}
-          </button>
+          <div><h3>{{ t("detailHoldingsTitle") }} <span class="count-badge">{{ positions.length }}</span></h3></div>
+          <button type="button" class="button button--ghost" @click="showPositionForm = !showPositionForm">+ {{ t("buttonAddPosition") }}</button>
         </div>
-
         <div v-if="shouldShowPositionForm" class="holdings-card__composer">
           <PositionForm :portfolio-id="portfolioId" @created="handlePositionCreated" />
         </div>
-
-        <StatusPanel
-          v-if="!positions.length"
-          variant="empty"
-          :title="t('statusNoPositionsTitle')"
-          :message="t('statusNoPositionsMessage')"
-        />
-
+        <StatusPanel v-if="!positions.length" variant="empty" :title="t('statusNoPositionsTitle')" :message="t('statusNoPositionsMessage')" />
         <div v-else class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>{{ t('tableIndex') }}</th>
-                <th>{{ t('tableAssetType') }}</th>
-                <th>{{ t('fieldTicker') }}</th>
-                <th>{{ t('tableQuantity') }}</th>
-                <th>{{ t('tableAvgCost') }}</th>
-                <th>{{ t('fieldCurrency') }}</th>
-                <th>{{ t('tablePositionCost') }}</th>
-                <th>{{ t('tableUpdated') }}</th>
-                <th>{{ t('tableAction') }}</th>
+                <th>{{ t("tableIndex") }}</th><th>{{ t("tableAssetType") }}</th><th>{{ t("fieldTicker") }}</th>
+                <th>{{ t("tableQuantity") }}</th><th>{{ t("tableAvgCost") }}</th><th>{{ t("fieldCurrency") }}</th>
+                <th>{{ t("tablePositionCost") }}</th><th>{{ t("tableUpdated") }}</th><th>{{ t("tableAction") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -184,13 +98,8 @@
                 <td>{{ formatCurrency(calculatePositionCost(pos), pos.currency) }}</td>
                 <td>{{ formatDisplayDate(pos.updatedAt) }}</td>
                 <td>
-                  <button
-                    type="button"
-                    class="button button--text-danger"
-                    :disabled="Boolean(deletingPositionIds[pos.id])"
-                    @click="removePosition(pos.id, pos.ticker)"
-                  >
-                    {{ deletingPositionIds[pos.id] ? t('buttonDeleting') : t('buttonDelete') }}
+                  <button type="button" class="button button--text-danger" :disabled="Boolean(deletingPositionIds[pos.id])" @click="removePosition(pos.id, pos.ticker)">
+                    {{ deletingPositionIds[pos.id] ? t("buttonDeleting") : t("buttonDelete") }}
                   </button>
                 </td>
               </tr>
@@ -201,17 +110,11 @@
     </template>
   </section>
 </template>
-
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getApiErrorMessage } from '../api/client'
-import {
-  deletePosition,
-  getPortfolio,
-  getPortfolioSummary,
-  listPositions
-} from '../api/portfolio'
+import { deletePosition, getPortfolio, getPortfolioSummary, listPositions } from '../api/portfolio'
 import AllocationDonutChart from '../components/AllocationDonutChart.vue'
 import MetricCard from '../components/MetricCard.vue'
 import PositionForm from '../components/PositionForm.vue'
@@ -219,45 +122,45 @@ import StatusPanel from '../components/StatusPanel.vue'
 import TrendLineChart from '../components/TrendLineChart.vue'
 import { useI18n } from '../composables/useI18n'
 import { useToast } from '../composables/useToast'
-import { formatCurrency, formatDisplayDate, formatNumber, formatRelativeDate } from '../utils/format'
-import {
-  buildAssetAllocation,
-  buildInvestedTrend,
-  calculatePositionCost,
-  formatAssetType
-} from '../utils/portfolio'
-
+import { formatCurrency, formatDisplayDate, formatNumber, formatPercent, formatRelativeDate } from '../utils/format'
+import { buildAssetAllocation, buildInvestedTrend, calculatePositionCost, formatAssetType } from '../utils/portfolio'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { success, info, error: notifyError } = useToast()
-
 const portfolio = ref(null)
-const summary = ref({ totalPositions: 0, totalCost: 0, marketValue: 0, unrealizedPnL: 0 })
+const summary = ref({ totalPositions: 0, totalCost: 0, marketValue: 0, unrealizedPnL: 0, returnRate: 0, positionsWithLivePrice: 0, positionsWithFallback: 0, baseCurrency: '' })
 const positions = ref([])
 const isLoading = ref(true)
 const loadError = ref('')
 const deletingPositionIds = reactive({})
 const showPositionForm = ref(false)
-
-// 从路由参数获取组合 ID
 const portfolioId = computed(() => Number(route.params.id))
 const isValidPortfolioId = computed(() => Number.isInteger(portfolioId.value) && portfolioId.value > 0)
 const allocationSeries = computed(() => buildAssetAllocation(positions.value))
 const investedTrend = computed(() => buildInvestedTrend(positions.value))
-const uniqueTickers = computed(() => new Set(positions.value.map((position) => position.ticker).filter(Boolean)).size)
+const uniqueTickers = computed(() => new Set(positions.value.map((p) => p.ticker).filter(Boolean)).size)
+// 基础币种：优先使用 summary 返回值，兜底 portfolio.baseCurrency
+const summaryBaseCurrency = computed(() => summary.value.baseCurrency || portfolio.value?.baseCurrency || 'USD')
+// 盈亏色调：正绿负红持平灰
+const pnlTone = computed(() => {
+  const r = Number(summary.value.returnRate)
+  if (r > 0) return 'mint'
+  if (r < 0) return 'rose'
+  return 'silver'
+})
+// 行情覆盖质量标签，例如 "3 / 5"
+const dataQualityLabel = computed(() => {
+  const live = summary.value.positionsWithLivePrice ?? 0
+  const total = summary.value.totalPositions ?? 0
+  return `${live} / ${total}`
+})
 const latestActivity = computed(() => {
-  const timestamps = positions.value
-    .map((position) => position.updatedAt)
-    .filter(Boolean)
-    .sort((left, right) => new Date(right) - new Date(left))
-
-  return timestamps.length ? formatRelativeDate(timestamps[0]) : t('noActivityYet')
+  const ts = positions.value.map((p) => p.updatedAt).filter(Boolean).sort((a, b) => new Date(b) - new Date(a))
+  return ts.length ? formatRelativeDate(ts[0]) : t('noActivityYet')
 })
 const portfolioCode = computed(() => `PF-${String(portfolio.value?.id || portfolioId.value).padStart(3, '0')}`)
 const shouldShowPositionForm = computed(() => showPositionForm.value || !positions.value.length)
-
-// 重新加载组合、摘要和持仓数据
 async function reload() {
   if (!isValidPortfolioId.value) {
     isLoading.value = false
@@ -266,17 +169,14 @@ async function reload() {
     positions.value = []
     return
   }
-
   isLoading.value = true
   loadError.value = ''
-
   try {
     const [portfolioRes, summaryRes, positionsRes] = await Promise.all([
       getPortfolio(portfolioId.value),
       getPortfolioSummary(portfolioId.value),
       listPositions(portfolioId.value)
     ])
-
     portfolio.value = portfolioRes.data
     summary.value = summaryRes.data
     positions.value = Array.isArray(positionsRes.data) ? positionsRes.data : []
@@ -288,10 +188,8 @@ async function reload() {
     isLoading.value = false
   }
 }
-
 async function removePosition(id, ticker) {
   deletingPositionIds[id] = true
-
   try {
     await deletePosition(id)
     success(t('toastPositionDeletedTitle'), t('toastPositionDeletedMessage', { ticker }))
@@ -302,22 +200,9 @@ async function removePosition(id, ticker) {
     delete deletingPositionIds[id]
   }
 }
-
-function handlePositionCreated() {
-  showPositionForm.value = false
-  reload()
-}
-
-function goBack() {
-  router.push({ name: 'portfolio-list' })
-}
-
-function notifyPortfolioActionsUnavailable() {
-  info(t('toastBackendPendingTitle'), t('toastBackendPendingMessage'))
-}
-
-// 挂载时加载数据
+function handlePositionCreated() { showPositionForm.value = false; reload() }
+function goBack() { router.push({ name: 'portfolio-list' }) }
+function notifyPortfolioActionsUnavailable() { info(t('toastBackendPendingTitle'), t('toastBackendPendingMessage')) }
 onMounted(reload)
 watch(portfolioId, reload)
 </script>
-

@@ -37,17 +37,25 @@ class PortfolioApiIntegrationTest {
 
         mockMvc.perform(post("/api/v1/positions")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"portfolioId\": 1, \"assetType\": \"STOCK\", \"ticker\": \"ZZZZ\", \"quantity\": 10, \"avgCost\": 150, \"currency\": \"USD\"}"))
+                .content("{\"portfolioId\": 1, \"assetType\": \"STOCK\", \"ticker\": \"AAPL\", \"quantity\": 10, \"avgCost\": 150, \"currency\": \"USD\"}"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.ticker").value("ZZZZ"));
+            .andExpect(jsonPath("$.ticker").value("AAPL"));
 
         mockMvc.perform(get("/api/v1/portfolios/1/summary"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.portfolioId").value(1))
             .andExpect(jsonPath("$.totalPositions").value(1))
             .andExpect(jsonPath("$.totalCost").value(1500.0000))
+            // 测试环境禁用行情（app.market-price.enabled=false），市值回退均价 => 市值=成本
             .andExpect(jsonPath("$.marketValue").value(1500.0000))
-            .andExpect(jsonPath("$.unrealizedPnL").value(0.0000));
+            .andExpect(jsonPath("$.unrealizedPnL").value(0.0000))
+            // 收益率：无行情时成本=市值 => returnRate = 0.00
+            .andExpect(jsonPath("$.returnRate").value(0.00))
+            // 数据质量：0 个实时行情，1 个回退
+            .andExpect(jsonPath("$.positionsWithLivePrice").value(0))
+            .andExpect(jsonPath("$.positionsWithFallback").value(1))
+            // 基础币种应为 USD
+            .andExpect(jsonPath("$.baseCurrency").value("USD"));
     }
 
     @Test
@@ -118,3 +126,4 @@ class PortfolioApiIntegrationTest {
             .andExpect(status().isBadRequest());
     }
 }
+
