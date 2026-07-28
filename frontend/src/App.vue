@@ -1,8 +1,8 @@
 <!-- 此文件是应用根组件，用于组织与参考图一致的后台式壳层和顶部工具栏。 -->
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'app-shell--sidebar-collapsed': isSidebarCollapsed }">
     <aside class="app-shell__sidebar">
-      <AppSidebar />
+      <AppSidebar :collapsed="isSidebarCollapsed" @toggle-collapse="toggleSidebarCollapse" />
     </aside>
 
     <div class="app-shell__workspace">
@@ -40,7 +40,11 @@
       </header>
 
       <main class="app-content">
-        <RouterView />
+        <RouterView v-slot="{ Component, route: currentRoute }">
+          <Transition name="view-fade" mode="out-in" appear>
+            <component :is="Component" :key="currentRoute.fullPath" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
 
@@ -49,7 +53,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppSidebar from './components/AppSidebar.vue'
 import AppToastContainer from './components/AppToastContainer.vue'
@@ -57,6 +61,11 @@ import { useI18n } from './composables/useI18n'
 
 const route = useRoute()
 const { locale, setLocale, t } = useI18n()
+const isSidebarCollapsed = ref(false)
+
+function toggleSidebarCollapse() {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
 
 // 顶部栏只关心当前视图所属区段，避免把业务标题重复塞进根组件。
 const currentView = computed(() => {

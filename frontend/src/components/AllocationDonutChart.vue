@@ -1,7 +1,7 @@
 <!-- 此文件是资产配置环形图组件，用于展示各类资产的成本占比。 -->
 <template>
-  <div class="donut-chart">
-    <div class="donut-chart__visual" :style="donutStyle">
+  <div class="donut-chart stagger-card">
+    <div class="donut-chart__visual donut-chart__visual--animated" :style="donutStyle">
       <div class="donut-chart__center">
         <div>
           <span>{{ t('donutTotalInvested') }}</span>
@@ -73,6 +73,7 @@ const donutStyle = computed(() => {
   })
 
   return {
+    // 环形图使用一次轻旋转的入场动画，因此这里保持纯背景计算，动画交给样式层控制。
     background: `conic-gradient(${stops.join(', ')})`
   }
 })
