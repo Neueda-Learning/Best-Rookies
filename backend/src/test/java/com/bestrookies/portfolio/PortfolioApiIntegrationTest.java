@@ -37,15 +37,17 @@ class PortfolioApiIntegrationTest {
 
         mockMvc.perform(post("/api/v1/positions")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"portfolioId\": 1, \"assetType\": \"STOCK\", \"ticker\": \"AAPL\", \"quantity\": 10, \"avgCost\": 150, \"currency\": \"USD\"}"))
+                .content("{\"portfolioId\": 1, \"assetType\": \"STOCK\", \"ticker\": \"ZZZZ\", \"quantity\": 10, \"avgCost\": 150, \"currency\": \"USD\"}"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.ticker").value("AAPL"));
+            .andExpect(jsonPath("$.ticker").value("ZZZZ"));
 
         mockMvc.perform(get("/api/v1/portfolios/1/summary"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.portfolioId").value(1))
             .andExpect(jsonPath("$.totalPositions").value(1))
-            .andExpect(jsonPath("$.totalCost").value(1500.0000));
+            .andExpect(jsonPath("$.totalCost").value(1500.0000))
+            .andExpect(jsonPath("$.marketValue").value(1500.0000))
+            .andExpect(jsonPath("$.unrealizedPnL").value(0.0000));
     }
 
     @Test
@@ -116,4 +118,3 @@ class PortfolioApiIntegrationTest {
             .andExpect(status().isBadRequest());
     }
 }
-

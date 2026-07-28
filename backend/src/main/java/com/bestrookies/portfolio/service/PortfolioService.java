@@ -23,10 +23,19 @@ public class PortfolioService {
 
     private final PortfolioRepository portfolioRepository;
     private final PositionRepository positionRepository;
+    private final MarketPriceService marketPriceService;
+    private final PriceSnapshotService priceSnapshotService;
 
-    public PortfolioService(PortfolioRepository portfolioRepository, PositionRepository positionRepository) {
+    public PortfolioService(
+        PortfolioRepository portfolioRepository,
+        PositionRepository positionRepository,
+        MarketPriceService marketPriceService,
+        PriceSnapshotService priceSnapshotService
+    ) {
         this.portfolioRepository = portfolioRepository;
         this.positionRepository = positionRepository;
+        this.marketPriceService = marketPriceService;
+        this.priceSnapshotService = priceSnapshotService;
     }
 
     @Transactional
@@ -51,16 +60,28 @@ public class PortfolioService {
 
     @Transactional(readOnly = true)
     public PortfolioSummaryResponse getSummary(Long portfolioId) {
-        // 摘要从已保存的持仓计算得出，保持逻辑集中
         Portfolio portfolio = getPortfolioEntity(portfolioId);
         List<Position> positions = positionRepository.findByPortfolioId(portfolio.getId(), Pageable.unpaged()).getContent();
 
         BigDecimal totalCost = positions.stream()
-            .map(p -> p.getQuantity().multiply(p.getAvgCost()))
+            .map(position -> position.getQuantity().multiply(position.getAvgCost()))
             .reduce(BigDecimal.ZERO, BigDecimal::add)
             .setScale(4, RoundingMode.HALF_UP);
 
-        return new PortfolioSummaryResponse(portfolio.getId(), positions.size(), totalCost);
+        BigDecimal marketValue = positions.stream()
+            .map(this::calculatePositionMarketValue)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(4, RoundingMode.HALF_UP);
+
+        BigDecimal unrealizedPnL = marketValue.subtract(totalCost).setScale(4, RoundingMode.HALF_UP);
+
+        return new PortfolioSummaryResponse(
+            portfolio.getId(),
+            positions.size(),
+            totalCost,
+            marketValue,
+            unrealizedPnL
+        );
     }
 
     @Transactional
@@ -78,6 +99,7 @@ public class PortfolioService {
     @Transactional
     public void deletePortfolio(Long portfolioId) {
         Portfolio portfolio = getPortfolioEntity(portfolioId);
+        positionRepository.deleteByPortfolioId(portfolioId);
         portfolioRepository.delete(portfolio);
     }
 
@@ -85,6 +107,19 @@ public class PortfolioService {
     public Portfolio getPortfolioEntity(Long portfolioId) {
         return portfolioRepository.findById(portfolioId)
             .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
+    }
+
+    private BigDecimal calculatePositionMarketValue(Position position) {
+        BigDecimal fallbackPrice = position.getAvgCost();
+        BigDecimal currentPrice = marketPriceService.fetchLatestPrice(position.getTicker())
+            .map(price -> {
+                priceSnapshotService.saveSnapshot(position.getTicker(), price, position.getCurrency());
+                return price;
+            })
+            .or(() -> priceSnapshotService.findLatestPriceValue(position.getTicker()))
+            .orElse(fallbackPrice);
+
+        return position.getQuantity().multiply(currentPrice);
     }
 
     private PortfolioResponse toResponse(Portfolio portfolio) {

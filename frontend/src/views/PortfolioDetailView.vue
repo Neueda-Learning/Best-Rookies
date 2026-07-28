@@ -233,7 +233,7 @@ const { t } = useI18n()
 const { success, info, error: notifyError } = useToast()
 
 const portfolio = ref(null)
-const summary = ref({ totalPositions: 0, totalCost: 0 })
+const summary = ref({ totalPositions: 0, totalCost: 0, marketValue: 0, unrealizedPnL: 0 })
 const positions = ref([])
 const isLoading = ref(true)
 const loadError = ref('')
