@@ -1,10 +1,10 @@
 <!-- 此文件是应用侧边栏组件，用于展示与参考图一致的品牌区和主导航。 -->
 <template>
-  <div class="sidebar">
+  <div class="sidebar" :class="{ 'sidebar--collapsed': collapsed }">
     <RouterLink class="sidebar__brand" :to="{ name: 'portfolio-list' }">
       <span class="sidebar__brand-mark">PM</span>
 
-      <div>
+      <div class="sidebar__brand-copy">
         <strong>Portfolio</strong>
         <p>Manager</p>
       </div>
@@ -17,6 +17,7 @@
         class="sidebar__nav-link"
         :class="{ 'sidebar__nav-link--active': route.name === 'portfolio-list' || route.name === 'portfolio-detail' }"
         :to="{ name: 'portfolio-list' }"
+        :title="t('sidebarPortfolioRegistryTitle')"
       >
         <span class="sidebar__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -31,7 +32,7 @@
         </div>
       </RouterLink>
 
-      <div class="sidebar__nav-link sidebar__nav-link--muted">
+      <div class="sidebar__nav-link sidebar__nav-link--muted" :title="t('sidebarAnalyticsTitle')">
         <span class="sidebar__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 18.5V10"></path>
@@ -48,7 +49,7 @@
         <span class="sidebar__soon">{{ t('sidebarComingSoon') }}</span>
       </div>
 
-      <div class="sidebar__nav-link sidebar__nav-link--muted">
+      <div class="sidebar__nav-link sidebar__nav-link--muted" :title="t('sidebarMarketTrendsTitle')">
         <span class="sidebar__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4.5 15.5l4-4 3 3 6-7"></path>
@@ -63,7 +64,7 @@
         <span class="sidebar__soon">{{ t('sidebarComingSoon') }}</span>
       </div>
 
-      <div class="sidebar__nav-link sidebar__nav-link--muted">
+      <div class="sidebar__nav-link sidebar__nav-link--muted" :title="t('sidebarSettingsTitle')">
         <span class="sidebar__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -79,9 +80,19 @@
       </div>
     </section>
 
-    <button type="button" class="sidebar__collapse">
-      <span aria-hidden="true">&lt;</span>
-      <span>{{ t('sidebarCollapse') }}</span>
+    <button
+      type="button"
+      class="sidebar__collapse"
+      :aria-expanded="String(!collapsed)"
+      :title="t('sidebarCollapse')"
+      @click="$emit('toggle-collapse')"
+    >
+      <span class="sidebar__collapse-icon" :class="{ 'sidebar__collapse-icon--collapsed': collapsed }" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </span>
+      <span class="sidebar__collapse-label">{{ t('sidebarCollapse') }}</span>
     </button>
   </div>
 </template>
@@ -89,6 +100,15 @@
 <script setup>
 import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n'
+
+defineProps({
+  collapsed: {
+    type: Boolean,
+    default: false
+  }
+})
+
+defineEmits(['toggle-collapse'])
 
 const route = useRoute()
 const { t } = useI18n()

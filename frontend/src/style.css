@@ -2,15 +2,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
+  /* 全局设计令牌：统一控制字体、颜色、阴影和圆角，决定整站的玻璃拟态基调。 */
   color-scheme: light;
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-display: 'Manrope', sans-serif;
-  --bg: #f5f7fb;
+  --bg: #eff3fb;
   --sidebar-border: rgba(255, 255, 255, 0.06);
-  --surface: #ffffff;
-  --surface-alt: #f8faff;
-  --border: #e6ebf5;
-  --border-strong: #d9deee;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-strong: rgba(255, 255, 255, 0.88);
+  --surface-alt: rgba(248, 250, 255, 0.82);
+  --border: rgba(216, 224, 241, 0.78);
+  --border-strong: rgba(203, 213, 234, 0.9);
   --text: #20283d;
   --muted: #7d879c;
   --muted-strong: #59647d;
@@ -20,9 +22,10 @@
   --gold: #e6b94c;
   --silver: #9ca5be;
   --danger: #c25d64;
-  --shadow: 0 18px 40px rgba(31, 38, 70, 0.08);
-  --radius-lg: 18px;
-  --radius-md: 14px;
+  --shadow: 0 18px 42px rgba(48, 63, 107, 0.10);
+  --shadow-soft: 0 10px 24px rgba(80, 96, 140, 0.08);
+  --radius-lg: 24px;
+  --radius-md: 18px;
 }
 
 * {
@@ -30,10 +33,12 @@
 }
 
 html {
+  /* 页面背景模块：用大面积渐变和柔光营造 mac 风格的轻盈桌面氛围。 */
   font-family: var(--font-sans);
   background:
-    radial-gradient(circle at top right, rgba(86, 70, 232, 0.08), transparent 28%),
-    linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
+    radial-gradient(circle at top right, rgba(86, 70, 232, 0.12), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(112, 201, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, #f7faff 0%, #eef3fb 100%);
 }
 
 body {
@@ -66,17 +71,42 @@ button:disabled {
 }
 
 .app-shell {
+  /* 应用壳层模块：负责侧边栏与主工作区的双栏布局，以及整体背景层次。 */
   min-height: 100vh;
   display: grid;
   grid-template-columns: 224px minmax(0, 1fr);
-  background: #f5f7fb;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.66), transparent 28%),
+    linear-gradient(180deg, #f7faff 0%, #eef3fb 100%);
+  transition: grid-template-columns 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-shell--sidebar-collapsed {
+  grid-template-columns: 88px minmax(0, 1fr);
 }
 
 .app-shell__sidebar {
+  /* 侧边栏容器模块：提供深色玻璃背景、内描边和折叠过渡的基础承载层。 */
   min-height: 100vh;
   padding: 20px 16px;
-  background: linear-gradient(180deg, #17203c 0%, #141c34 100%);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(118, 99, 255, 0.24), transparent 34%),
+    linear-gradient(180deg, #1a2447 0%, #121a31 52%, #0f162b 100%);
   border-right: 1px solid var(--sidebar-border);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  transition: padding 260ms cubic-bezier(0.22, 1, 0.36, 1), background 260ms ease;
+}
+
+.app-shell__sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 18px 10px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  pointer-events: none;
 }
 
 .app-shell__workspace {
@@ -86,14 +116,17 @@ button:disabled {
 }
 
 .app-topbar {
+  /* 顶部栏模块：用浅色毛玻璃、模糊和阴影模拟悬浮工具条效果。 */
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 14px 28px;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.64);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(92, 110, 154, 0.08);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
 }
 
 .app-topbar__title-group,
@@ -173,12 +206,12 @@ h4 {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.72);
   color: var(--muted-strong);
   display: grid;
   place-items: center;
-  box-shadow: none;
+  box-shadow: var(--shadow-soft);
   padding: 0;
 }
 
@@ -210,19 +243,23 @@ h4 {
 }
 
 .locale-switch {
+  /* 语言切换模块：胶囊外观配合半透明背景，形成轻量控制器质感。 */
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 2px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: #fff;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-soft);
 }
 
 .locale-switch__button {
   min-height: 32px;
   padding: 0 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
   color: var(--muted-strong);
   font-size: 0.82rem;
@@ -231,15 +268,101 @@ h4 {
 }
 
 .locale-switch__button--active {
-  background: var(--brand);
+  background: linear-gradient(135deg, rgba(108, 92, 255, 0.94) 0%, rgba(84, 71, 232, 0.94) 100%);
   color: #fff;
+  box-shadow: 0 10px 20px rgba(86, 70, 232, 0.22);
 }
 
 .app-content {
   padding: 28px;
 }
 
+.view-fade-enter-active,
+.view-fade-leave-active {
+  /* 页面切换动画模块：控制页面整体从下向上、由模糊到清晰的入场与离场。 */
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
+}
+
+.view-fade-enter-from,
+.view-fade-leave-to {
+  opacity: 0;
+  transform: translateY(28px) scale(0.985);
+  filter: blur(18px);
+}
+
+.view-fade-enter-to,
+.view-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* 页面切换时让模块内部元素分层出现，形成更明显的由下往上、由糊到清的入场感。 */
+.view-fade-enter-from .stagger-card > *,
+.view-fade-enter-from .metric-card > *,
+.view-fade-enter-from .status-panel > *,
+.view-fade-enter-from .page-heading > *,
+.view-fade-enter-from .detail-breadcrumbs > *,
+.view-fade-enter-from .holdings-card > * {
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(12px);
+}
+
+.view-fade-enter-active .stagger-card > *,
+.view-fade-enter-active .metric-card > *,
+.view-fade-enter-active .status-panel > *,
+.view-fade-enter-active .page-heading > *,
+.view-fade-enter-active .detail-breadcrumbs > *,
+.view-fade-enter-active .holdings-card > * {
+  transition:
+    opacity 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 460ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.view-fade-enter-active .stagger-card > *:nth-child(1),
+.view-fade-enter-active .metric-card > *:nth-child(1),
+.view-fade-enter-active .status-panel > *:nth-child(1),
+.view-fade-enter-active .page-heading > *:nth-child(1),
+.view-fade-enter-active .detail-breadcrumbs > *:nth-child(1),
+.view-fade-enter-active .holdings-card > *:nth-child(1) {
+  transition-delay: 60ms;
+}
+
+.view-fade-enter-active .stagger-card > *:nth-child(2),
+.view-fade-enter-active .metric-card > *:nth-child(2),
+.view-fade-enter-active .status-panel > *:nth-child(2),
+.view-fade-enter-active .page-heading > *:nth-child(2),
+.view-fade-enter-active .detail-breadcrumbs > *:nth-child(2),
+.view-fade-enter-active .holdings-card > *:nth-child(2) {
+  transition-delay: 120ms;
+}
+
+.view-fade-enter-active .stagger-card > *:nth-child(3),
+.view-fade-enter-active .metric-card > *:nth-child(3),
+.view-fade-enter-active .status-panel > *:nth-child(3),
+.view-fade-enter-active .page-heading > *:nth-child(3),
+.view-fade-enter-active .detail-breadcrumbs > *:nth-child(3),
+.view-fade-enter-active .holdings-card > *:nth-child(3) {
+  transition-delay: 180ms;
+}
+
+.view-fade-enter-active .stagger-card > *:nth-child(4),
+.view-fade-enter-active .metric-card > *:nth-child(4),
+.view-fade-enter-active .status-panel > *:nth-child(4),
+.view-fade-enter-active .page-heading > *:nth-child(4),
+.view-fade-enter-active .detail-breadcrumbs > *:nth-child(4),
+.view-fade-enter-active .holdings-card > *:nth-child(4) {
+  transition-delay: 240ms;
+}
+
 .page-section {
+  /* 页面内容模块：限制主内容区最小宽度，避免复杂布局在栅格中被挤爆。 */
   min-width: 0;
 }
 
@@ -280,15 +403,35 @@ h3 {
 }
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  /* 通用卡片模块：定义所有内容卡的玻璃背景、圆角、阴影和 hover 抬升效果。 */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 255, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: var(--radius-lg);
   padding: 20px;
   box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(48, 63, 107, 0.12);
+  border-color: rgba(255, 255, 255, 0.88);
 }
 
 .sidebar {
+  /* 侧边栏导航模块：控制导航组整体间距、层级和折叠时的对齐方式。 */
   min-height: calc(100vh - 40px);
+  position: relative;
+  z-index: 1;
+  transition: gap 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar--collapsed {
+  justify-items: center;
 }
 
 .sidebar__brand {
@@ -296,8 +439,21 @@ h3 {
   align-items: center;
   gap: 14px;
   text-decoration: none;
-  padding-bottom: 18px;
+  padding: 8px 10px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  transition: background 220ms ease, gap 260ms cubic-bezier(0.22, 1, 0.36, 1), padding 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar--collapsed .sidebar__brand {
+  justify-content: center;
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar__brand:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .sidebar__brand-mark {
@@ -306,10 +462,22 @@ h3 {
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #6756f1 0%, #4d3de0 100%);
+  background: linear-gradient(135deg, #7f72ff 0%, #5e50ea 55%, #4334cb 100%);
   color: #fff;
   font-weight: 800;
   font-family: var(--font-display);
+  box-shadow: 0 16px 28px rgba(86, 70, 232, 0.28);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.sidebar__brand:hover .sidebar__brand-mark {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 30px rgba(86, 70, 232, 0.32);
+}
+
+.sidebar__brand-copy {
+  min-width: 0;
+  transition: opacity 160ms ease, transform 220ms ease;
 }
 
 .sidebar__brand strong {
@@ -328,6 +496,11 @@ h3 {
 .sidebar__section {
   display: grid;
   gap: 10px;
+  transition: gap 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar--collapsed .sidebar__section {
+  justify-items: center;
 }
 
 .sidebar__caption {
@@ -337,29 +510,66 @@ h3 {
   letter-spacing: 0.16em;
   font-size: 0.72rem;
   font-weight: 700;
+  transition: opacity 160ms ease, transform 220ms ease;
 }
 
 .sidebar__nav-link {
+  /* 侧边栏菜单项模块：负责菜单卡片的半透明底、悬停反馈和收起过渡。 */
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   min-height: 48px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 14px;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.78);
   border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(6px);
+  transition:
+    background 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    grid-template-columns 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar--collapsed .sidebar__nav-link {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  width: 48px;
+  min-height: 48px;
+  padding: 0;
+}
+
+.sidebar__nav-link:hover {
+  transform: translateX(2px);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar--collapsed .sidebar__nav-link:hover {
+  transform: translateY(-1px);
 }
 
 .sidebar__nav-link--active {
-  background: linear-gradient(135deg, #6150eb 0%, #5342e3 100%);
+  background: linear-gradient(135deg, #7663ff 0%, #5b49eb 52%, #4637d4 100%);
   color: #fff;
-  box-shadow: 0 12px 24px rgba(88, 71, 229, 0.28);
+  border-color: rgba(151, 140, 255, 0.3);
+  box-shadow: 0 14px 28px rgba(88, 71, 229, 0.28);
 }
 
 .sidebar__nav-link--muted {
   color: rgba(255, 255, 255, 0.38);
+}
+
+.sidebar__nav-copy {
+  min-width: 0;
+  transition: opacity 160ms ease, transform 220ms ease;
 }
 
 .sidebar__nav-copy strong {
@@ -372,6 +582,7 @@ h3 {
   width: 18px;
   height: 18px;
   display: inline-flex;
+  transition: transform 220ms ease;
 }
 
 .sidebar__icon svg {
@@ -379,22 +590,73 @@ h3 {
   height: 100%;
 }
 
+.sidebar__nav-link:hover .sidebar__icon {
+  transform: scale(1.06);
+}
+
 .sidebar__soon {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.32);
+  transition: opacity 160ms ease, transform 220ms ease;
+}
+
+.sidebar--collapsed .sidebar__brand-copy,
+.sidebar--collapsed .sidebar__caption,
+.sidebar--collapsed .sidebar__nav-copy,
+.sidebar--collapsed .sidebar__soon,
+.sidebar--collapsed .sidebar__collapse-label {
+  display: none;
 }
 
 .sidebar__collapse {
+  /* 侧边栏折叠按钮模块：提供底部控制器的胶囊外观和展开/收起动画反馈。 */
   margin-top: auto;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 40px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.56);
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.72);
   box-shadow: none;
+  transition:
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
+}
+
+.sidebar__collapse:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.sidebar__collapse-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar__collapse-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar__collapse-icon--collapsed {
+  transform: rotate(180deg);
+}
+
+.sidebar--collapsed .sidebar__collapse {
+  width: 48px;
+  justify-content: center;
+  padding: 0;
 }
 
 .page-heading {
@@ -412,12 +674,13 @@ h3 {
 
 .button,
 .toast__close {
+  /* 按钮模块：统一按钮的圆角、抬升和玻璃触感，覆盖主按钮与辅助按钮。 */
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 10px;
+  border-radius: 14px;
   border: 1px solid transparent;
   font-weight: 700;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, filter 180ms ease;
 }
 
 .button:hover:not(:disabled),
@@ -430,16 +693,25 @@ h3 {
 
 .button--primary {
   color: #fff;
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
-  box-shadow: 0 12px 24px rgba(86, 70, 232, 0.22);
+  background: linear-gradient(135deg, #6d5cff 0%, #5447e8 52%, #3f31cb 100%);
+  box-shadow: 0 14px 28px rgba(86, 70, 232, 0.24);
 }
 
 .button--secondary,
 .button--ghost {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.68);
   color: var(--muted-strong);
-  border-color: var(--border);
-  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.button--secondary:hover:not(:disabled),
+.button--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 14px 26px rgba(80, 96, 140, 0.12);
 }
 
 .button--text-danger {
@@ -467,6 +739,7 @@ h3 {
 }
 
 .summary-grid {
+  /* 指标网格模块：用于列表页和详情页顶部概览卡片的栅格排布。 */
   display: grid;
   gap: 16px;
 }
@@ -480,12 +753,16 @@ h3 {
 }
 
 .metric-card {
+  /* 指标卡模块：展示关键数值，用柔和高光和角落色斑增强信息密度。 */
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-md);
   padding: 22px;
-  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 255, 0.78) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 
 .metric-card::after {
@@ -551,12 +828,23 @@ h3 {
 }
 
 .portfolio-card {
+  /* 组合卡模块：列表页中的 portfolio 卡片，负责工作区入口的悬浮感和分层。 */
   position: relative;
   overflow: hidden;
   padding: 20px 20px 18px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(247, 249, 255, 0.78) 100%);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.portfolio-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 42px rgba(48, 63, 107, 0.12);
+  border-color: rgba(255, 255, 255, 0.9);
 }
 
 .portfolio-card--workspace::before {
@@ -598,15 +886,17 @@ h3 {
 .token-chip,
 .asset-pill,
 .count-badge {
+  /* 标签徽章模块：统一 token、资产类型和数量角标的胶囊视觉语言。 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.7);
   color: var(--muted-strong);
   font-size: 0.76rem;
   font-weight: 700;
+  box-shadow: 0 6px 16px rgba(80, 96, 140, 0.06);
 }
 
 .token-chip {
@@ -629,10 +919,11 @@ h3 {
 }
 
 .composer-card {
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 247, 255, 0.82) 100%);
 }
 
 .form-grid {
+  /* 表单布局模块：控制表单字段的列数和间距，保证录入区有稳定节奏。 */
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
@@ -655,21 +946,26 @@ h3 {
 
 input,
 select {
+  /* 输入控件模块：提供玻璃输入框、聚焦发光和更贴近 mac 风格的输入体验。 */
   width: 100%;
   min-height: 46px;
   padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-strong);
-  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.78);
   color: var(--text);
   outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), 0 6px 18px rgba(80, 96, 140, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
 input:focus,
 select:focus {
-  border-color: rgba(86, 70, 232, 0.56);
-  box-shadow: 0 0 0 4px rgba(86, 70, 232, 0.12);
+  border-color: rgba(108, 92, 255, 0.46);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 4px rgba(108, 92, 255, 0.10), 0 12px 24px rgba(80, 96, 140, 0.08);
 }
 
 .field__error,
@@ -698,25 +994,115 @@ select:focus {
 }
 
 .detail-layout-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.3fr) 280px;
-  align-items: start;
+  /* 详情页主布局模块：负责上方四张核心卡片的三列结构和底线对齐关系。 */
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.12fr) 300px;
+  align-items: end;
+  margin-bottom: 0;
 }
 
-.quick-actions {
-  gap: 10px;
+.detail-feature-card {
+  /* 详情页主视觉卡模块：承载资产配置与表现基线两张大卡，并上提内容重心。 */
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  padding-top: 14px;
+}
+
+/* 两张主图表卡改为单行底部对齐后，继续上提内部内容，确保底线明显高于下方持仓卡。 */
+.detail-feature-card--allocation,
+.detail-feature-card--trend {
+  position: relative;
+  align-self: end;
+}
+
+.detail-feature-card--allocation .section-heading,
+.detail-feature-card--trend .section-heading {
+  margin-bottom: 2px;
+}
+
+/* 资产配置卡使用更亮的光斑和内发光，让它成为详情页里最有层次的一张卡。 */
+.detail-feature-card--allocation {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(106, 154, 255, 0.18), transparent 30%),
+    radial-gradient(circle at 84% 16%, rgba(61, 195, 158, 0.16), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(244, 249, 255, 0.84) 100%);
+}
+
+.detail-feature-card--allocation::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: calc(var(--radius-lg) - 8px);
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+  pointer-events: none;
+}
+
+.detail-feature-card--allocation > *,
+.detail-feature-card--trend > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 详情页四张主卡采用等高栅格，让左侧图表卡和右侧信息卡在桌面端底线对齐。 */
+.detail-sidebar {
+  /* 详情页右侧信息卡模块：控制“关于组合”和“数据说明”两张辅助卡的堆叠。 */
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  align-self: end;
+}
+
+.info-card {
+  display: grid;
+  align-content: start;
+  justify-content: start;
+  min-width: 0;
+}
+
+.info-card .info-list,
+.info-card .note-list {
+  align-content: start;
+  min-width: 0;
 }
 
 .donut-chart {
+  /* 资产配置图表模块：负责环形图与右侧图例的双栏排布和上提布局。 */
   grid-template-columns: 240px minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
+  min-height: 100%;
+  min-width: 0;
+  align-content: start;
+  padding-top: 6px;
 }
 
 .donut-chart__visual {
   width: 180px;
   height: 180px;
-  margin: 0 auto;
+  margin: 2px auto 0;
   border-radius: 50%;
   position: relative;
+  box-shadow: 0 18px 34px rgba(60, 90, 138, 0.12);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 240ms ease, filter 240ms ease;
+}
+
+/* 首次看到资产配置卡时，让环形图轻微旋转并从柔焦过渡到清晰，避免过度炫技。 */
+.donut-chart__visual--animated {
+  /* 环形图入场效果：首次进入视野时做一次轻旋转和柔焦还原。 */
+  animation: donut-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center;
+}
+
+/* 扇形图悬浮效果：鼠标移入资产配置卡时，让环形图轻微抬升并顺时针微旋转。 */
+.detail-feature-card--allocation:hover .donut-chart__visual {
+  transform: translateY(-4px) rotate(8deg) scale(1.03);
+  box-shadow: 0 24px 42px rgba(60, 90, 138, 0.18);
+  filter: saturate(1.06);
+}
+
+.detail-feature-card--allocation:hover .legend-row {
+  transform: translateX(2px);
+  box-shadow: 0 14px 26px rgba(80, 96, 140, 0.08);
 }
 
 .donut-chart__visual::after {
@@ -724,8 +1110,10 @@ select:focus {
   position: absolute;
   inset: 24px;
   border-radius: 50%;
-  background: #fff;
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .donut-chart__center {
@@ -750,12 +1138,21 @@ select:focus {
 .donut-chart__legend {
   display: grid;
   gap: 10px;
+  min-width: 0;
+  align-content: start;
+  padding-top: 10px;
 }
 
 .legend-row {
+  /* 图例条目模块：每个资产类型的说明卡，保持轻玻璃块状质感。 */
   padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--surface-alt);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(248, 251, 255, 0.66) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 22px rgba(80, 96, 140, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
 }
 
 .legend-row__dot {
@@ -769,13 +1166,41 @@ select:focus {
 }
 
 .trend-chart__canvas {
+  /* 表现基线图表模块：折线图主体使用投影强化曲线悬浮感。 */
   width: 100%;
   height: auto;
   display: block;
+  filter: drop-shadow(0 12px 18px rgba(28, 73, 74, 0.08));
+}
+
+.detail-feature-card--trend .trend-chart {
+  align-content: start;
+  padding-top: 4px;
+}
+
+.detail-feature-card .trend-chart,
+.detail-feature-card .donut-chart,
+.detail-feature-card .status-panel {
+  min-height: 0;
 }
 
 .holdings-card__composer {
   padding-bottom: 12px;
+}
+
+.holdings-card {
+  /* 持仓模块：控制下方持仓区与上方图表区之间的垂直节奏。 */
+  margin-top: 0;
+}
+
+.table-wrapper {
+  /* 持仓表格容器模块：给表格增加独立玻璃外壳，避免数据区显得生硬。 */
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .section-heading {
@@ -788,14 +1213,19 @@ select:focus {
 }
 
 .position-form {
-  background: linear-gradient(180deg, #fcfcff 0%, #f8f9ff 100%);
+  /* 持仓表单模块：让新增持仓区域与其他卡片保持一致的玻璃层次。 */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 247, 255, 0.82) 100%);
 }
 
 .status-panel {
+  /* 状态面板模块：统一 loading、empty、error 提示块的边框和柔和背景。 */
   padding: 18px;
-  border-radius: 14px;
-  border: 1px dashed var(--border-strong);
-  background: rgba(248, 250, 255, 0.9);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .status-panel--error {
@@ -856,11 +1286,20 @@ select:focus {
   vertical-align: middle;
 }
 
+.data-table tbody tr {
+  transition: background 180ms ease;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.34);
+}
+
 .data-table td {
   font-size: 0.94rem;
 }
 
 .toast-stack {
+  /* Toast 模块：控制全局提示消息的悬浮位置与卡片风格。 */
   position: fixed;
   top: 18px;
   right: 18px;
@@ -920,18 +1359,42 @@ select:focus {
   }
 }
 
+@keyframes donut-reveal {
+  from {
+    opacity: 0;
+    transform: rotate(-42deg) scale(0.92);
+    filter: blur(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+    filter: blur(0);
+  }
+}
+
 @media (max-width: 1220px) {
+  /* 中等屏幕响应式模块：把详情页顶区压缩成两列，维持信息卡可读性。 */
   .detail-layout-grid {
     grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    margin-bottom: 0;
+  }
+
+  .detail-feature-card {
+    align-self: stretch;
   }
 
   .detail-sidebar {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+    align-self: stretch;
   }
 }
 
 @media (max-width: 1080px) {
+  /* 平板尺寸响应式模块：折叠为单列阅读流，避免多列挤压内容。 */
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -949,10 +1412,16 @@ select:focus {
   .form-grid--two-columns,
   .donut-chart {
     grid-template-columns: 1fr;
+    padding-top: 0;
+  }
+
+  .holdings-card {
+    margin-top: 0;
   }
 }
 
 @media (max-width: 720px) {
+  /* 手机尺寸响应式模块：进一步压缩内边距和卡片尺寸，提升触屏可用性。 */
   .app-topbar,
   .app-content {
     padding-left: 16px;

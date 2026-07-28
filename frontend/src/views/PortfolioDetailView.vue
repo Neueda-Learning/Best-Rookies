@@ -36,18 +36,18 @@
         <MetricCard :label="t('metricLastActivity')" :value="latestActivity" tone="silver" badge="ACT" :hint="t('metricLastActivityHint')" />
       </div>
       <div class="detail-layout-grid">
-        <div class="card">
+        <div class="card detail-feature-card detail-feature-card--allocation stagger-card">
           <div class="section-heading"><div><h3>{{ t("detailAssetAllocation") }}</h3><p>{{ t("detailAssetAllocationDescription") }}</p></div></div>
           <StatusPanel v-if="!allocationSeries.length" variant="empty" :title="t('statusNoAllocationTitle')" :message="t('statusNoAllocationMessage')" />
           <AllocationDonutChart v-else :segments="allocationSeries" :total-value="summary.totalCost" :currency="portfolio.baseCurrency" />
         </div>
-        <div class="card">
+        <div class="card detail-feature-card detail-feature-card--trend stagger-card">
           <div class="section-heading"><div><h3>{{ t("detailPerformanceBaseline") }}</h3><p>{{ t("detailPerformanceDescription") }}</p></div></div>
           <StatusPanel v-if="!investedTrend.length" variant="empty" :title="t('statusNoTrendTitle')" :message="t('statusNoTrendMessage')" />
           <TrendLineChart v-else :points="investedTrend" :currency="portfolio.baseCurrency" />
         </div>
         <div class="detail-sidebar">
-          <article class="card info-card">
+          <article class="card info-card stagger-card">
             <p class="eyebrow">{{ t("detailAboutPortfolio") }}</p>
             <div class="info-list">
               <div class="info-list__row"><span>{{ t("fieldPortfolioName") }}</span><strong>{{ portfolio.name }}</strong></div>
@@ -56,16 +56,9 @@
               <div class="info-list__row"><span>{{ t("listCardCreated") }}</span><strong>{{ formatDisplayDate(portfolio.createdAt) }}</strong></div>
             </div>
           </article>
-          <article class="card info-card">
+          <article class="card info-card stagger-card">
             <p class="eyebrow">{{ t("detailDataNotes") }}</p>
             <ul class="note-list note-list--compact"><li>{{ t("detailNoteFormula") }}</li><li>{{ t("detailNoteBaseCurrency") }}</li></ul>
-          </article>
-          <article class="card info-card">
-            <p class="eyebrow">{{ t("detailQuickActions") }}</p>
-            <div class="quick-actions">
-              <button type="button" class="button button--ghost button--block" @click="notifyPortfolioActionsUnavailable">{{ t("actionExportCsv") }}</button>
-              <button type="button" class="button button--ghost button--block" @click="notifyPortfolioActionsUnavailable">{{ t("actionSharePortfolio") }}</button>
-            </div>
           </article>
         </div>
       </div>
@@ -124,10 +117,11 @@ import { useI18n } from '../composables/useI18n'
 import { useToast } from '../composables/useToast'
 import { formatCurrency, formatDisplayDate, formatNumber, formatPercent, formatRelativeDate } from '../utils/format'
 import { buildAssetAllocation, buildInvestedTrend, calculatePositionCost, formatAssetType } from '../utils/portfolio'
+
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
-const { success, info, error: notifyError } = useToast()
+const { success, error: notifyError } = useToast()
 const portfolio = ref(null)
 const summary = ref({ totalPositions: 0, totalCost: 0, marketValue: 0, unrealizedPnL: 0, returnRate: 0, positionsWithLivePrice: 0, positionsWithFallback: 0, baseCurrency: '' })
 const positions = ref([])
@@ -159,8 +153,11 @@ const latestActivity = computed(() => {
   const ts = positions.value.map((p) => p.updatedAt).filter(Boolean).sort((a, b) => new Date(b) - new Date(a))
   return ts.length ? formatRelativeDate(ts[0]) : t('noActivityYet')
 })
+
+// 详情页中的组合编号统一转成 PF-001 这样的展示格式，避免模板里重复拼接。
 const portfolioCode = computed(() => `PF-${String(portfolio.value?.id || portfolioId.value).padStart(3, '0')}`)
 const shouldShowPositionForm = computed(() => showPositionForm.value || !positions.value.length)
+
 async function reload() {
   if (!isValidPortfolioId.value) {
     isLoading.value = false
@@ -188,6 +185,7 @@ async function reload() {
     isLoading.value = false
   }
 }
+
 async function removePosition(id, ticker) {
   deletingPositionIds[id] = true
   try {
@@ -200,9 +198,10 @@ async function removePosition(id, ticker) {
     delete deletingPositionIds[id]
   }
 }
+
 function handlePositionCreated() { showPositionForm.value = false; reload() }
 function goBack() { router.push({ name: 'portfolio-list' }) }
-function notifyPortfolioActionsUnavailable() { info(t('toastBackendPendingTitle'), t('toastBackendPendingMessage')) }
+
 onMounted(reload)
 watch(portfolioId, reload)
 </script>
