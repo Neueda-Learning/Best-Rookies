@@ -1,3 +1,4 @@
+<!-- 此文件是投资组合列表页，用于展示组合卡片并支持新建组合。 -->
 <template>
   <section class="page-section">
     <div class="page-heading">
@@ -189,22 +190,6 @@ const form = reactive({
   baseCurrency: 'USD'
 })
 
-<<<<<<< HEAD
-// 从后端加载组合列表
-async function loadPortfolios() {
-  const { data } = await api.get('/portfolios')
-  portfolios.value = data
-}
-
-// 创建新组合
-async function createPortfolio() {
-  await api.post('/portfolios', {
-    name: form.name,
-    baseCurrency: form.baseCurrency
-  })
-  form.name = ''
-  await loadPortfolios()
-=======
 const formErrors = reactive({
   name: '',
   baseCurrency: ''
@@ -367,7 +352,6 @@ async function handleCreatePortfolio() {
   } finally {
     isCreating.value = false
   }
->>>>>>> 5bfe1c1 (Update frontend only)
 }
 
 // 导航到组合详情页

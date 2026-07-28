@@ -1,3 +1,4 @@
+<!-- 此文件是投资组合详情页，用于展示组合摘要、图表和持仓列表。 -->
 <template>
   <section class="page-section">
     <div class="detail-breadcrumbs">
@@ -288,12 +289,6 @@ async function reload() {
   }
 }
 
-<<<<<<< HEAD
-// 删除持仓
-async function removePosition(id) {
-  await api.delete(`/positions/${id}`)
-  await reload()
-=======
 async function removePosition(id, ticker) {
   deletingPositionIds[id] = true
 
@@ -319,7 +314,6 @@ function goBack() {
 
 function notifyPortfolioActionsUnavailable() {
   info(t('toastBackendPendingTitle'), t('toastBackendPendingMessage'))
->>>>>>> 5bfe1c1 (Update frontend only)
 }
 
 // 挂载时加载数据

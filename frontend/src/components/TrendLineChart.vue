@@ -1,3 +1,4 @@
+<!-- 此文件是趋势折线图组件，用于展示投资组合投入金额的时间变化。 -->
 <template>
   <div class="trend-chart">
     <svg viewBox="0 0 520 260" class="trend-chart__canvas" preserveAspectRatio="none" :aria-label="t('trendAriaLabel')">

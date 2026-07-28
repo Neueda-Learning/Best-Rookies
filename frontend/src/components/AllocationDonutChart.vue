@@ -1,3 +1,4 @@
+<!-- 此文件是资产配置环形图组件，用于展示各类资产的成本占比。 -->
 <template>
   <div class="donut-chart">
     <div class="donut-chart__visual" :style="donutStyle">

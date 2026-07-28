@@ -1,3 +1,4 @@
+<!-- 此文件是新增持仓表单组件，用于处理输入校验、提交和成功提示。 -->
 <template>
   <form class="position-form card" novalidate @submit.prevent="submit">
     <div class="section-heading">
@@ -111,24 +112,6 @@ const form = reactive({
   currency: 'USD'
 })
 
-<<<<<<< HEAD
-// 提交表单创建持仓
-async function submit() {
-  await api.post('/positions', {
-    portfolioId: props.portfolioId,
-    assetType: form.assetType,
-    ticker: form.ticker,
-    quantity: form.quantity,
-    avgCost: form.avgCost,
-    currency: form.currency
-  })
-  // 重置表单
-  form.ticker = ''
-  form.quantity = 1
-  form.avgCost = 0
-  // 通知父组件已创建
-  emit('created')
-=======
 const errors = reactive({
   assetType: '',
   ticker: '',
@@ -270,7 +253,6 @@ async function submit() {
   } finally {
     isSubmitting.value = false
   }
->>>>>>> 5bfe1c1 (Update frontend only)
 }
 </script>
 

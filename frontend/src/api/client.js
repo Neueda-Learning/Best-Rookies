@@ -2,11 +2,11 @@
 import axios from 'axios'
 import { t } from '../composables/useI18n'
 
-<<<<<<< HEAD
+
 // 集中后端基础 URL，所以所有 API 调用都重用一个客户端
-=======
+
 // Centralize backend configuration so every request shares the same base URL and timeout.
->>>>>>> 5bfe1c1 (Update frontend only)
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
   timeout: 10000,
