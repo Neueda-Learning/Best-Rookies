@@ -13,3 +13,6 @@ spring:
     # 在测试中启用 Flyway 迁移
     enabled: true
 
+app:
+  market-price:
+    enabled: false
