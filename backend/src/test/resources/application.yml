@@ -16,6 +16,8 @@ spring:
 app:
   market-price:
     enabled: false
+  market-symbol:
+    enabled: false
   exchange-rate:
     # 测试环境禁用外部 API，使用内置默认汇率
     enabled: false

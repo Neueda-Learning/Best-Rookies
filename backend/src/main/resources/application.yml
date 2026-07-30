@@ -19,6 +19,9 @@ app:
   market-price:
     enabled: "${MARKET_PRICE_ENABLED:true}"
     endpoint: "${MARKET_PRICE_ENDPOINT:https://c4rm9elh30.execute-api.us-east-1.amazonaws.com/default/cachedPriceData?ticker={ticker}}"
+  market-symbol:
+    enabled: "${MARKET_SYMBOL_ENABLED:true}"
+    search-endpoint: "${MARKET_SYMBOL_ENDPOINT:https://query1.finance.yahoo.com/v1/finance/search?q={q}}"
   exchange-rate:
     # 是否启用 Yahoo Finance 实时汇率（false 时使用内置默认汇率）
     enabled: "${EXCHANGE_RATE_ENABLED:true}"

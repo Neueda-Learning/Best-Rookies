@@ -11,7 +11,7 @@
     <div class="form-grid">
       <label class="field">
         <span class="field__label">{{ t('fieldAssetType') }}</span>
-        <select v-model="form.assetType" @blur="validateField('assetType')">
+        <select v-model="form.assetType" @change="onAssetTypeChange" @blur="validateField('assetType')">
           <option v-for="option in assetTypeOptions" :key="option.value" :value="option.value">
             {{ t(option.labelKey) }}
           </option>
@@ -23,12 +23,17 @@
         <span class="field__label">{{ t('fieldTicker') }}</span>
         <input
           v-model="form.ticker"
+          list="ticker-suggestions"
           type="text"
           maxlength="12"
           :placeholder="t('placeholderTicker')"
-          @input="form.ticker = form.ticker.toUpperCase().trimStart()"
+          @input="onTickerInput"
           @blur="validateField('ticker')"
         />
+        <datalist id="ticker-suggestions">
+          <option v-for="ticker in tickerSuggestions" :key="ticker" :value="ticker" />
+        </datalist>
+        <small v-if="isTickerLoading">{{ t('labelTickerSearching') }}</small>
         <small v-if="errors.ticker" class="field__error">{{ errors.ticker }}</small>
       </label>
 
@@ -83,10 +88,15 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { getApiErrorMessage } from '../api/client'
 import { useI18n } from '../composables/useI18n'
-import { createPosition } from '../api/portfolio'
+import {
+  createPosition,
+  getSupportedAssetTypes,
+  getSupportedTickersByAssetType,
+  searchSupportedTickers
+} from '../api/portfolio'
 import { useToast } from '../composables/useToast'
 
 const props = defineProps({
@@ -102,6 +112,10 @@ const { success, error: notifyError } = useToast()
 
 const isSubmitting = ref(false)
 const submitError = ref('')
+const isTickerLoading = ref(false)
+const tickerSuggestions = ref([])
+const assetTypeOptions = ref([])
+let tickerSearchDebounceId = null
 
 // 持仓表单数据
 const form = reactive({
@@ -120,15 +134,73 @@ const errors = reactive({
   currency: ''
 })
 
-// 这里直接镜像后端枚举，避免前端表单可选值落后于最新 API 契约。
-const assetTypeOptions = [
-  { value: 'STOCK', labelKey: 'assetTypeStock' },
-  { value: 'BOND', labelKey: 'assetTypeBond' },
-  { value: 'CASH', labelKey: 'assetTypeCash' },
-  { value: 'ETF', labelKey: 'assetTypeEtf' },
-  { value: 'FUND', labelKey: 'assetTypeFund' },
-  { value: 'CRYPTO', labelKey: 'assetTypeCrypto' }
-]
+function mapAssetTypeLabelKey(assetType) {
+  if (assetType === 'STOCK') return 'assetTypeStock'
+  if (assetType === 'BOND') return 'assetTypeBond'
+  if (assetType === 'CASH') return 'assetTypeCash'
+  if (assetType === 'ETF') return 'assetTypeEtf'
+  if (assetType === 'FUND') return 'assetTypeFund'
+  if (assetType === 'CRYPTO') return 'assetTypeCrypto'
+  return 'assetTypeUnknown'
+}
+
+async function loadAssetTypeOptions() {
+  try {
+    const response = await getSupportedAssetTypes()
+    const raw = Array.isArray(response.data) ? response.data : []
+    assetTypeOptions.value = raw.map((value) => ({ value, labelKey: mapAssetTypeLabelKey(value) }))
+    if (!assetTypeOptions.value.some((opt) => opt.value === form.assetType) && assetTypeOptions.value.length) {
+      form.assetType = assetTypeOptions.value[0].value
+    }
+  } catch {
+    // 回退静态枚举，保证离线时表单仍可用。
+    assetTypeOptions.value = [
+      { value: 'STOCK', labelKey: 'assetTypeStock' },
+      { value: 'BOND', labelKey: 'assetTypeBond' },
+      { value: 'CASH', labelKey: 'assetTypeCash' },
+      { value: 'ETF', labelKey: 'assetTypeEtf' },
+      { value: 'FUND', labelKey: 'assetTypeFund' },
+      { value: 'CRYPTO', labelKey: 'assetTypeCrypto' }
+    ]
+  }
+}
+
+async function loadTickerSuggestions(query = '') {
+  if (!form.assetType) {
+    tickerSuggestions.value = []
+    return
+  }
+
+  isTickerLoading.value = true
+  try {
+    const response = query
+      ? await searchSupportedTickers(form.assetType, query, 20)
+      : await getSupportedTickersByAssetType(form.assetType)
+    tickerSuggestions.value = Array.isArray(response.data) ? response.data : []
+  } catch {
+    tickerSuggestions.value = []
+  } finally {
+    isTickerLoading.value = false
+  }
+}
+
+function onAssetTypeChange() {
+  form.ticker = ''
+  validateField('assetType')
+  loadTickerSuggestions('')
+}
+
+function onTickerInput(event) {
+  const value = String(event?.target?.value ?? '').toUpperCase().trimStart()
+  form.ticker = value
+
+  if (tickerSearchDebounceId) {
+    clearTimeout(tickerSearchDebounceId)
+  }
+  tickerSearchDebounceId = setTimeout(() => {
+    loadTickerSuggestions(value.trim())
+  }, 250)
+}
 
 function normalizeCurrency(value) {
   return value.trim().toUpperCase()
@@ -221,6 +293,7 @@ function resetForm() {
   form.quantity = 1
   form.avgCost = 0
   form.currency = 'USD'
+  loadTickerSuggestions('')
   submitError.value = ''
 }
 
@@ -254,5 +327,10 @@ async function submit() {
     isSubmitting.value = false
   }
 }
+
+onMounted(async () => {
+  await loadAssetTypeOptions()
+  await loadTickerSuggestions('')
+})
 </script>
 

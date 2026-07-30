@@ -28,3 +28,15 @@ export function createPosition(payload) {
 export function deletePosition(id) {
   return api.delete(`/positions/${id}`)
 }
+
+export function getSupportedAssetTypes() {
+  return api.get('/positions/asset-types/supported')
+}
+
+export function getSupportedTickersByAssetType(assetType) {
+  return api.get('/positions/tickers/supported', { params: { assetType } })
+}
+
+export function searchSupportedTickers(assetType, q, limit = 20) {
+  return api.get('/positions/tickers/search', { params: { assetType, q, limit } })
+}
