@@ -130,4 +130,13 @@ public class ExchangeRateService {
         // from → to = perUsdRates[to] / perUsdRates[from]
         return toPerUsd.divide(fromPerUsd, 8, RoundingMode.HALF_UP);
     }
+
+    /**
+     * 获取当前支持的所有币种列表。
+     *
+     * @return 币种代码列表，例如 [USD, EUR, GBP, ...]
+     */
+    public List<String> getSupportedCurrencies() {
+        return List.copyOf(perUsdRates.keySet());
+    }
 }

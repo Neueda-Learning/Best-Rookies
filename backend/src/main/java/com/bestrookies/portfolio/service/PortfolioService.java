@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PortfolioService {
 
-    private static final String SUMMARY_CURRENCY = "USD";
 
     private final PortfolioRepository portfolioRepository;
     private final PositionRepository positionRepository;
@@ -67,19 +66,21 @@ public class PortfolioService {
     /**
      * 计算组合摘要，包含完整收益计算：
      * <ul>
-     *   <li>totalCost      - 所有持仓成本之和（统一换算为 USD）</li>
-     *   <li>marketValue    - 所有持仓市值之和（优先用实时行情，无行情回退均价，统一换算为 USD）</li>
+     *   <li>totalCost      - 所有持仓成本之和（统一换算为 baseCurrency）</li>
+     *   <li>marketValue    - 所有持仓市值之和（优先用实时行情，无行情回退均价，统一换算为 baseCurrency）</li>
      *   <li>unrealizedPnL  - marketValue - totalCost</li>
      *   <li>returnRate     - unrealizedPnL / totalCost × 100（%）</li>
      *   <li>positionsWithLivePrice - 本次获取到行情的持仓数</li>
      *   <li>positionsWithFallback  - 回退均价的持仓数</li>
      * </ul>
      *
-     * <p>汇率规则：所有持仓金额统一通过 ExchangeRateService 换算为 USD。
+     * <p>汇率规则：所有持仓金额统一通过 ExchangeRateService 换算为组合的 baseCurrency。
+     * 用户创建组合时选定 baseCurrency，后续所有摘要都按该币种展示。
      */
     @Transactional
     public PortfolioSummaryResponse getSummary(Long portfolioId) {
         Portfolio portfolio = getPortfolioEntity(portfolioId);
+        String baseCurrency = portfolio.getBaseCurrency();
 
         List<Position> positions = positionRepository
             .findByPortfolioId(portfolio.getId(), Pageable.unpaged())
@@ -87,7 +88,7 @@ public class PortfolioService {
 
         // 逐个持仓估值并聚合
         List<PositionValuation> valuations = positions.stream()
-            .map(p -> valuatePosition(p, SUMMARY_CURRENCY))
+            .map(p -> valuatePosition(p, baseCurrency))
             .toList();
 
         // 总投入成本（baseCurrency）
@@ -130,7 +131,7 @@ public class PortfolioService {
             returnRate,
             positionsWithLivePrice,
             positionsWithFallback,
-             SUMMARY_CURRENCY
+            baseCurrency
         );
     }
 
