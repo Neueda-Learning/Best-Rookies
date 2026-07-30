@@ -6,6 +6,7 @@ import com.bestrookies.portfolio.dto.PortfolioSummaryResponse;
 import com.bestrookies.portfolio.dto.PortfolioUpdateRequest;
 import com.bestrookies.portfolio.exception.ApiErrorResponse;
 import com.bestrookies.portfolio.service.PortfolioService;
+import com.bestrookies.portfolio.service.ExchangeRateService;
 import jakarta.validation.Valid;
 import java.util.List;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,9 +44,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PortfolioController {
 
     private final PortfolioService portfolioService;
+    private final ExchangeRateService exchangeRateService;
 
-    public PortfolioController(PortfolioService portfolioService) {
+    public PortfolioController(PortfolioService portfolioService, ExchangeRateService exchangeRateService) {
         this.portfolioService = portfolioService;
+        this.exchangeRateService = exchangeRateService;
     }
 
     // 创建新组合
@@ -53,6 +56,14 @@ public class PortfolioController {
     @Operation(summary = "Create a portfolio")
     public PortfolioResponse createPortfolio(@Valid @RequestBody PortfolioCreateRequest request) {
         return portfolioService.createPortfolio(request);
+    }
+
+    // 获取支持的币种列表（用于前端下拉框）
+    @GetMapping("/currencies/supported")
+    @Operation(summary = "Get supported currencies for portfolio baseCurrency and position currency")
+    public ResponseEntity<List<String>> getSupportedCurrencies() {
+        List<String> currencies = exchangeRateService.getSupportedCurrencies();
+        return ResponseEntity.ok(currencies);
     }
 
     // 列出所有组合
