@@ -45,14 +45,11 @@
 
         <label class="field">
           <span class="field__label">{{ t('fieldBaseCurrency') }}</span>
-          <input
-            v-model="form.baseCurrency"
-            type="text"
-            maxlength="3"
-            placeholder="USD"
-            @input="form.baseCurrency = normalizeCurrency(form.baseCurrency)"
-            @blur="validateField('baseCurrency')"
-          />
+          <select v-model="form.baseCurrency" @blur="validateField('baseCurrency')">
+            <option v-for="currency in supportedCurrencies" :key="currency" :value="currency">
+              {{ currency }}
+            </option>
+          </select>
           <small v-if="formErrors.baseCurrency" class="field__error">{{ formErrors.baseCurrency }}</small>
         </label>
       </div>
@@ -166,7 +163,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getApiErrorMessage } from '../api/client'
-import { createPortfolio, getPortfolioSummary, listPortfolios, listPositions } from '../api/portfolio'
+import { createPortfolio, getPortfolioSummary, getSupportedCurrencies, listPortfolios, listPositions } from '../api/portfolio'
 import MetricCard from '../components/MetricCard.vue'
 import StatusPanel from '../components/StatusPanel.vue'
 import { useI18n } from '../composables/useI18n'
@@ -184,6 +181,7 @@ const loadError = ref('')
 const formError = ref('')
 const isCreatePanelOpen = ref(false)
 const portfolioInsights = ref({})
+const supportedCurrencies = ref(['USD', 'CNY', 'HKD', 'EUR', 'JPY'])
 
 const form = reactive({
   name: '',
@@ -225,6 +223,25 @@ const portfolioCards = computed(() => {
 
 function normalizeCurrency(value) {
   return value.trim().toUpperCase()
+}
+
+async function loadSupportedCurrencyOptions() {
+  try {
+    const response = await getSupportedCurrencies()
+    const currencies = Array.isArray(response.data)
+      ? response.data.map((item) => normalizeCurrency(String(item || ''))).filter(Boolean)
+      : []
+
+    if (currencies.length) {
+      supportedCurrencies.value = [...new Set(currencies)]
+    }
+  } catch {
+    // 币种接口异常时回退到静态常用列表，避免创建表单无法使用。
+  }
+
+  if (!supportedCurrencies.value.includes(form.baseCurrency)) {
+    form.baseCurrency = supportedCurrencies.value[0] || 'USD'
+  }
 }
 
 function validateField(fieldName) {
@@ -345,7 +362,7 @@ async function handleCreatePortfolio() {
 
     await createPortfolio(payload)
     form.name = ''
-    form.baseCurrency = 'USD'
+    form.baseCurrency = supportedCurrencies.value[0] || 'USD'
     isCreatePanelOpen.value = false
     success(t('toastPortfolioCreatedTitle'), t('toastPortfolioCreatedMessage', { name: payload.name }))
     await loadPortfolios()
@@ -362,7 +379,10 @@ function goDetail(id) {
   router.push({ name: 'portfolio-detail', params: { id } })
 }
 
-// 挂载时加载组合列表
-onMounted(loadPortfolios)
+// 挂载时先拉取币种选项，再加载组合列表，保证创建表单直接显示后端支持值。
+onMounted(async () => {
+  await loadSupportedCurrencyOptions()
+  await loadPortfolios()
+})
 </script>
 

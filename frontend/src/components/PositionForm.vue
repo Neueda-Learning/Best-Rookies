@@ -38,42 +38,36 @@
       </label>
 
       <label class="field">
-        <span class="field__label">{{ t('fieldQuantity') }}</span>
+        <span class="field__label">{{ t('fieldInvestedCost') }}</span>
         <input
-          v-model.number="form.quantity"
+          v-model.number="form.investedCost"
           type="number"
           min="0.0001"
           step="0.0001"
-          :placeholder="t('placeholderQuantity')"
-          @blur="validateField('quantity')"
+          :placeholder="t('placeholderInvestedCost')"
+          @blur="validateField('investedCost')"
         />
-        <small v-if="errors.quantity" class="field__error">{{ errors.quantity }}</small>
-      </label>
-
-      <label class="field">
-        <span class="field__label">{{ t('fieldAverageCost') }}</span>
-        <input
-          v-model.number="form.avgCost"
-          type="number"
-          min="0"
-          step="0.0001"
-          :placeholder="t('placeholderAverageCost')"
-          @blur="validateField('avgCost')"
-        />
-        <small v-if="errors.avgCost" class="field__error">{{ errors.avgCost }}</small>
+        <small v-if="errors.investedCost" class="field__error">{{ errors.investedCost }}</small>
       </label>
 
       <label class="field">
         <span class="field__label">{{ t('fieldCurrency') }}</span>
-        <input
-          v-model="form.currency"
-          type="text"
-          maxlength="3"
-          placeholder="USD"
-          @input="form.currency = normalizeCurrency(form.currency)"
-          @blur="validateField('currency')"
-        />
+        <select v-model="form.currency" @blur="validateField('currency')">
+          <option v-for="currency in currencyOptions" :key="currency" :value="currency">
+            {{ currency }}
+          </option>
+        </select>
         <small v-if="errors.currency" class="field__error">{{ errors.currency }}</small>
+      </label>
+
+      <label class="field">
+        <span class="field__label">{{ t('fieldUpdatedAt') }}</span>
+        <input
+          v-model="form.updatedAt"
+          type="date"
+          @blur="validateField('updatedAt')"
+        />
+        <small v-if="errors.updatedAt" class="field__error">{{ errors.updatedAt }}</small>
       </label>
     </div>
 
@@ -94,6 +88,7 @@ import { useI18n } from '../composables/useI18n'
 import {
   createPosition,
   getSupportedAssetTypes,
+  getSupportedCurrencies,
   getSupportedTickersByAssetType,
   searchSupportedTickers
 } from '../api/portfolio'
@@ -115,24 +110,37 @@ const submitError = ref('')
 const isTickerLoading = ref(false)
 const tickerSuggestions = ref([])
 const assetTypeOptions = ref([])
+const currencyOptions = ref(['USD', 'CNY', 'HKD', 'EUR', 'JPY'])
 let tickerSearchDebounceId = null
 
 // 持仓表单数据
 const form = reactive({
   assetType: 'STOCK',
   ticker: '',
-  quantity: 1,
-  avgCost: 0,
-  currency: 'USD'
+  investedCost: null,
+  currency: 'USD',
+  updatedAt: getTodayDateInputValue()
 })
 
 const errors = reactive({
   assetType: '',
   ticker: '',
-  quantity: '',
-  avgCost: '',
-  currency: ''
+  investedCost: '',
+  currency: '',
+  updatedAt: ''
 })
+
+function getTodayDateInputValue() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function buildUpdatedAtIso(dateValue) {
+  return `${dateValue}T12:00:00Z`
+}
 
 function mapAssetTypeLabelKey(assetType) {
   if (assetType === 'STOCK') return 'assetTypeStock'
@@ -162,6 +170,25 @@ async function loadAssetTypeOptions() {
       { value: 'FUND', labelKey: 'assetTypeFund' },
       { value: 'CRYPTO', labelKey: 'assetTypeCrypto' }
     ]
+  }
+}
+
+async function loadCurrencyOptions() {
+  try {
+    const response = await getSupportedCurrencies()
+    const currencies = Array.isArray(response.data)
+      ? response.data.map((item) => normalizeCurrency(String(item || ''))).filter(Boolean)
+      : []
+
+    if (currencies.length) {
+      currencyOptions.value = [...new Set(currencies)]
+    }
+  } catch {
+    // 币种接口不可用时保留常用币种回退值，保证表单依然可提交。
+  }
+
+  if (!currencyOptions.value.includes(form.currency)) {
+    form.currency = currencyOptions.value[0] || 'USD'
   }
 }
 
@@ -231,33 +258,18 @@ function validateField(fieldName) {
     return true
   }
 
-  if (fieldName === 'quantity') {
-    if (form.quantity === null || form.quantity === undefined || form.quantity === '') {
-      errors.quantity = t('validationQuantityRequired')
+  if (fieldName === 'investedCost') {
+    if (form.investedCost === null || form.investedCost === undefined || form.investedCost === '') {
+      errors.investedCost = t('validationInvestedCostRequired')
       return false
     }
 
-    if (Number(form.quantity) < 0.0001) {
-      errors.quantity = t('validationQuantityMin')
+    if (Number(form.investedCost) < 0.0001) {
+      errors.investedCost = t('validationInvestedCostMin')
       return false
     }
 
-    errors.quantity = ''
-    return true
-  }
-
-  if (fieldName === 'avgCost') {
-    if (form.avgCost === null || form.avgCost === undefined || form.avgCost === '') {
-      errors.avgCost = t('validationAverageCostRequired')
-      return false
-    }
-
-    if (Number(form.avgCost) < 0) {
-      errors.avgCost = t('validationAverageCostNegative')
-      return false
-    }
-
-    errors.avgCost = ''
+    errors.investedCost = ''
     return true
   }
 
@@ -279,20 +291,30 @@ function validateField(fieldName) {
     return true
   }
 
+  if (fieldName === 'updatedAt') {
+    if (!form.updatedAt) {
+      errors.updatedAt = t('validationUpdatedAtRequired')
+      return false
+    }
+
+    errors.updatedAt = ''
+    return true
+  }
+
   return true
 }
 
 function validateForm() {
-  const fields = ['assetType', 'ticker', 'quantity', 'avgCost', 'currency']
+  const fields = ['assetType', 'ticker', 'investedCost', 'currency', 'updatedAt']
   return fields.every((fieldName) => validateField(fieldName))
 }
 
 function resetForm() {
   form.assetType = 'STOCK'
   form.ticker = ''
-  form.quantity = 1
-  form.avgCost = 0
-  form.currency = 'USD'
+  form.investedCost = null
+  form.currency = currencyOptions.value[0] || 'USD'
+  form.updatedAt = getTodayDateInputValue()
   loadTickerSuggestions('')
   submitError.value = ''
 }
@@ -307,13 +329,18 @@ async function submit() {
   isSubmitting.value = true
 
   try {
+    const investedCost = Number(form.investedCost)
     const payload = {
       portfolioId: props.portfolioId,
       assetType: form.assetType,
       ticker: form.ticker.trim().toUpperCase(),
-      quantity: Number(form.quantity),
-      avgCost: Number(form.avgCost),
-      currency: normalizeCurrency(form.currency)
+      // 后端当前仍使用 quantity × avgCost 计算持仓成本，这里固定 quantity=1，
+      // 并把用户输入的投入成本映射到 avgCost，从而让整条成本链保持正确。
+      quantity: 1,
+      avgCost: investedCost,
+      currency: normalizeCurrency(form.currency),
+      // 日期控件只让用户选日，因此这里统一写入当天中午 UTC，避免展示时跨时区偏移到前一天。
+      updatedAt: buildUpdatedAtIso(form.updatedAt)
     }
 
     await createPosition(payload)
@@ -329,6 +356,7 @@ async function submit() {
 }
 
 onMounted(async () => {
+  await loadCurrencyOptions()
   await loadAssetTypeOptions()
   await loadTickerSuggestions('')
 })

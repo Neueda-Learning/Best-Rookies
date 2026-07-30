@@ -22,10 +22,41 @@
   --gold: #e6b94c;
   --silver: #9ca5be;
   --danger: #c25d64;
+  --chart-accent: #1e6a52;
+  --chart-axis: rgba(29, 26, 19, 0.16);
+  --chart-grid: rgba(89, 100, 125, 0.12);
+  --chart-point-fill: #fff8ed;
   --shadow: 0 18px 42px rgba(48, 63, 107, 0.10);
   --shadow-soft: 0 10px 24px rgba(80, 96, 140, 0.08);
   --radius-lg: 24px;
   --radius-md: 18px;
+}
+
+:root[data-theme='dark'] {
+  /* 夜间主题令牌：统一替换背景、文字和图表配色，驱动全局明暗切换。 */
+  color-scheme: dark;
+  --bg: #0d1428;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --surface: rgba(18, 27, 49, 0.78);
+  --surface-strong: rgba(20, 31, 56, 0.9);
+  --surface-alt: rgba(24, 35, 62, 0.84);
+  --border: rgba(99, 117, 163, 0.24);
+  --border-strong: rgba(126, 145, 194, 0.34);
+  --text: #eaf0ff;
+  --muted: #95a2c0;
+  --muted-strong: #c6d0ea;
+  --brand: #7f8cff;
+  --brand-strong: #6775ee;
+  --mint: #58d8b0;
+  --gold: #f0c768;
+  --silver: #aab5d4;
+  --danger: #f58a92;
+  --chart-accent: #63d7b2;
+  --chart-axis: rgba(222, 232, 255, 0.18);
+  --chart-grid: rgba(164, 184, 232, 0.12);
+  --chart-point-fill: #18233f;
+  --shadow: 0 22px 48px rgba(2, 6, 23, 0.42);
+  --shadow-soft: 0 12px 28px rgba(2, 6, 23, 0.3);
 }
 
 * {
@@ -41,9 +72,20 @@ html {
     linear-gradient(180deg, #f7faff 0%, #eef3fb 100%);
 }
 
+html[data-theme='dark'] {
+  background:
+    radial-gradient(circle at top right, rgba(127, 140, 255, 0.18), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(42, 194, 170, 0.16), transparent 24%),
+    linear-gradient(180deg, #111a31 0%, #0a1020 100%);
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  color: var(--text);
+}
+
+html[data-theme='dark'] body {
   color: var(--text);
 }
 
@@ -70,6 +112,56 @@ button:disabled {
   min-height: 100vh;
 }
 
+html,
+body,
+#app,
+.app-shell,
+.app-topbar,
+.app-shell__sidebar,
+.card,
+.metric-card,
+.portfolio-card,
+.composer-card,
+.position-form,
+.table-wrapper,
+.status-panel,
+.legend-row,
+.button,
+.toast,
+.toast__close,
+.locale-switch,
+.locale-switch__button,
+.app-topbar__icon-button,
+.app-topbar__avatar,
+input,
+select,
+.detail-feature-card--allocation,
+.donut-chart__visual::after {
+  /* 主题切换过渡模块：统一背景、文字、边框与阴影的柔和缓动，避免日夜切换生硬跳变。 */
+  transition:
+    background 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.trend-chart__axis-line,
+.trend-chart__grid-line,
+.trend-chart__tick-label,
+.trend-chart__axis-label,
+.trend-chart__canvas path,
+.trend-chart__canvas polyline,
+.trend-chart__canvas circle,
+.trend-chart__canvas stop {
+  transition:
+    stroke 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    fill 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    stop-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .app-shell {
   /* 应用壳层模块：负责侧边栏与主工作区的双栏布局，以及整体背景层次。 */
   min-height: 100vh;
@@ -79,6 +171,12 @@ button:disabled {
     radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.66), transparent 28%),
     linear-gradient(180deg, #f7faff 0%, #eef3fb 100%);
   transition: grid-template-columns 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-theme='dark'] .app-shell {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(112, 137, 255, 0.18), transparent 30%),
+    linear-gradient(180deg, #121a31 0%, #0b1120 100%);
 }
 
 .app-shell--sidebar-collapsed {
@@ -242,6 +340,42 @@ h4 {
   transform: translateX(-50%);
 }
 
+.app-topbar__theme-button {
+  /* 顶部主题按钮模块：承载日夜切换图标，并与语言按钮形成一组操作控件。 */
+  overflow: hidden;
+}
+
+.app-topbar__theme-glyph {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  position: relative;
+  background: linear-gradient(180deg, #ffd979 0%, #f3b648 100%);
+  box-shadow: 0 0 0 3px rgba(230, 185, 76, 0.2);
+  transition:
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-topbar__theme-glyph::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px dashed rgba(230, 185, 76, 0.42);
+  transition: border-color 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-topbar__theme-glyph--dark {
+  background: #dbe5ff;
+  box-shadow: inset -5px 0 0 rgba(21, 31, 57, 0.88), 0 0 0 3px rgba(168, 185, 229, 0.16);
+}
+
+.app-topbar__theme-glyph--dark::after {
+  border-color: rgba(168, 185, 229, 0.26);
+}
+
 .locale-switch {
   /* 语言切换模块：胶囊外观配合半透明背景，形成轻量控制器质感。 */
   display: inline-grid;
@@ -271,6 +405,29 @@ h4 {
   background: linear-gradient(135deg, rgba(108, 92, 255, 0.94) 0%, rgba(84, 71, 232, 0.94) 100%);
   color: #fff;
   box-shadow: 0 10px 20px rgba(86, 70, 232, 0.22);
+}
+
+html[data-theme='dark'] .app-topbar {
+  background: rgba(15, 23, 42, 0.72);
+  border-bottom-color: rgba(111, 132, 181, 0.18);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.28);
+}
+
+html[data-theme='dark'] .app-topbar__icon-button,
+html[data-theme='dark'] .app-topbar__avatar {
+  border-color: rgba(126, 145, 194, 0.24);
+  background: rgba(22, 32, 57, 0.78);
+  color: var(--muted-strong);
+}
+
+html[data-theme='dark'] .app-topbar__avatar {
+  background: linear-gradient(180deg, rgba(58, 72, 124, 0.84) 0%, rgba(37, 49, 92, 0.96) 100%);
+  color: #eff4ff;
+}
+
+html[data-theme='dark'] .locale-switch {
+  border-color: rgba(126, 145, 194, 0.24);
+  background: rgba(18, 27, 49, 0.84);
 }
 
 .app-content {
@@ -420,6 +577,26 @@ h3 {
   transform: translateY(-2px);
   box-shadow: 0 24px 48px rgba(48, 63, 107, 0.12);
   border-color: rgba(255, 255, 255, 0.88);
+}
+
+html[data-theme='dark'] .card,
+html[data-theme='dark'] .metric-card,
+html[data-theme='dark'] .portfolio-card,
+html[data-theme='dark'] .composer-card,
+html[data-theme='dark'] .position-form,
+html[data-theme='dark'] .toast,
+html[data-theme='dark'] .table-wrapper,
+html[data-theme='dark'] .status-panel,
+html[data-theme='dark'] .legend-row {
+  background: linear-gradient(180deg, rgba(20, 31, 56, 0.94) 0%, rgba(15, 24, 46, 0.84) 100%);
+  border-color: rgba(126, 145, 194, 0.22);
+  box-shadow: var(--shadow);
+}
+
+html[data-theme='dark'] .card:hover,
+html[data-theme='dark'] .portfolio-card:hover {
+  border-color: rgba(158, 177, 229, 0.3);
+  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.42);
 }
 
 .sidebar {
@@ -714,6 +891,22 @@ h3 {
   box-shadow: 0 14px 26px rgba(80, 96, 140, 0.12);
 }
 
+html[data-theme='dark'] .button--secondary,
+html[data-theme='dark'] .button--ghost,
+html[data-theme='dark'] .toast__close {
+  background: rgba(24, 35, 62, 0.88);
+  color: var(--muted-strong);
+  border-color: rgba(126, 145, 194, 0.24);
+}
+
+html[data-theme='dark'] .button--secondary:hover:not(:disabled),
+html[data-theme='dark'] .button--ghost:hover:not(:disabled),
+html[data-theme='dark'] .toast__close:hover:not(:disabled) {
+  background: rgba(31, 45, 80, 0.96);
+  border-color: rgba(158, 177, 229, 0.28);
+  box-shadow: 0 14px 26px rgba(2, 6, 23, 0.32);
+}
+
 .button--text-danger {
   min-height: auto;
   padding: 0;
@@ -749,7 +942,7 @@ h3 {
 }
 
 .summary-grid--detail {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .metric-card {
@@ -968,6 +1161,21 @@ select:focus {
   box-shadow: 0 0 0 4px rgba(108, 92, 255, 0.10), 0 12px 24px rgba(80, 96, 140, 0.08);
 }
 
+html[data-theme='dark'] input,
+html[data-theme='dark'] select {
+  border-color: rgba(126, 145, 194, 0.24);
+  background: rgba(20, 31, 56, 0.88);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 22px rgba(2, 6, 23, 0.22);
+}
+
+html[data-theme='dark'] input:focus,
+html[data-theme='dark'] select:focus {
+  border-color: rgba(127, 140, 255, 0.52);
+  background: rgba(27, 40, 71, 0.96);
+  box-shadow: 0 0 0 4px rgba(127, 140, 255, 0.14), 0 14px 28px rgba(2, 6, 23, 0.34);
+}
+
 .field__error,
 .form-alert {
   font-size: 0.86rem;
@@ -979,6 +1187,10 @@ select:focus {
   padding: 12px 14px;
   border-radius: 10px;
   background: rgba(194, 93, 100, 0.08);
+}
+
+html[data-theme='dark'] .form-alert {
+  background: rgba(245, 138, 146, 0.14);
 }
 
 .detail-breadcrumbs {
@@ -994,25 +1206,28 @@ select:focus {
 }
 
 .detail-layout-grid {
-  /* 详情页主布局模块：负责上方四张核心卡片的三列结构和底线对齐关系。 */
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.12fr) 300px;
-  align-items: end;
+  /* 详情页主布局模块：将资产配置与表现基线改成左右并列的双主卡结构。 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   margin-bottom: 0;
 }
 
 .detail-feature-card {
-  /* 详情页主视觉卡模块：承载资产配置与表现基线两张大卡，并上提内容重心。 */
+  /* 详情页主视觉卡模块：承载两张核心大卡，并放大内容区域以填满释放出的空间。 */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   align-content: start;
+  min-width: 0;
+  min-height: 420px;
   padding-top: 14px;
+  overflow: hidden;
 }
 
-/* 两张主图表卡改为单行底部对齐后，继续上提内部内容，确保底线明显高于下方持仓卡。 */
+/* 两张主图表卡现在作为并列主卡展示，统一拉伸高度并保留较强视觉重心。 */
 .detail-feature-card--allocation,
 .detail-feature-card--trend {
   position: relative;
-  align-self: end;
+  align-self: stretch;
 }
 
 .detail-feature-card--allocation .section-heading,
@@ -1028,6 +1243,13 @@ select:focus {
     linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(244, 249, 255, 0.84) 100%);
 }
 
+html[data-theme='dark'] .detail-feature-card--allocation {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(110, 141, 255, 0.2), transparent 30%),
+    radial-gradient(circle at 84% 16%, rgba(88, 216, 176, 0.18), transparent 24%),
+    linear-gradient(180deg, rgba(23, 34, 60, 0.96) 0%, rgba(15, 24, 46, 0.9) 100%);
+}
+
 .detail-feature-card--allocation::before {
   content: '';
   position: absolute;
@@ -1038,15 +1260,20 @@ select:focus {
   pointer-events: none;
 }
 
+html[data-theme='dark'] .detail-feature-card--allocation::before {
+  border-color: rgba(126, 145, 194, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+}
+
 .detail-feature-card--allocation > *,
 .detail-feature-card--trend > * {
   position: relative;
   z-index: 1;
 }
 
-/* 详情页四张主卡采用等高栅格，让左侧图表卡和右侧信息卡在桌面端底线对齐。 */
+/* 右侧辅助卡已移除，保留旧选择器以兼容样式结构，不再参与布局。 */
 .detail-sidebar {
-  /* 详情页右侧信息卡模块：控制“关于组合”和“数据说明”两张辅助卡的堆叠。 */
+  /* 详情页右侧信息卡模块：当前版本已停用。 */
   display: grid;
   grid-template-rows: auto auto;
   gap: 16px;
@@ -1067,18 +1294,18 @@ select:focus {
 }
 
 .donut-chart {
-  /* 资产配置图表模块：负责环形图与右侧图例的双栏排布和上提布局。 */
-  grid-template-columns: 240px minmax(0, 1fr);
+  /* 资产配置图表模块：放大环形图和图例区，使左侧主卡更饱满。 */
+  grid-template-columns: 280px minmax(0, 1fr);
   align-items: start;
   min-height: 100%;
   min-width: 0;
   align-content: start;
-  padding-top: 6px;
+  padding-top: 10px;
 }
 
 .donut-chart__visual {
-  width: 180px;
-  height: 180px;
+  width: 208px;
+  height: 208px;
   margin: 2px auto 0;
   border-radius: 50%;
   position: relative;
@@ -1116,6 +1343,11 @@ select:focus {
   -webkit-backdrop-filter: blur(16px);
 }
 
+html[data-theme='dark'] .donut-chart__visual::after {
+  background: rgba(13, 20, 40, 0.94);
+  border-color: rgba(126, 145, 194, 0.24);
+}
+
 .donut-chart__center {
   position: absolute;
   inset: 0;
@@ -1140,7 +1372,7 @@ select:focus {
   gap: 10px;
   min-width: 0;
   align-content: start;
-  padding-top: 10px;
+  padding-top: 4px;
 }
 
 .legend-row {
@@ -1173,9 +1405,38 @@ select:focus {
   filter: drop-shadow(0 12px 18px rgba(28, 73, 74, 0.08));
 }
 
+.trend-chart__axis-line {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.trend-chart__grid-line {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+}
+
+.trend-chart__axis-label,
+.trend-chart__tick-label {
+  fill: var(--muted);
+  font-family: var(--font-sans);
+}
+
+.trend-chart__axis-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.trend-chart__tick-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .detail-feature-card--trend .trend-chart {
-  align-content: start;
-  padding-top: 4px;
+  align-content: stretch;
+  min-height: 100%;
+  padding-top: 10px;
 }
 
 .detail-feature-card .trend-chart,
@@ -1238,6 +1499,16 @@ select:focus {
   border-color: rgba(230, 185, 76, 0.26);
 }
 
+html[data-theme='dark'] .status-panel--error {
+  background: rgba(76, 29, 36, 0.82);
+  border-color: rgba(245, 138, 146, 0.22);
+}
+
+html[data-theme='dark'] .status-panel--empty {
+  background: rgba(63, 47, 16, 0.72);
+  border-color: rgba(240, 199, 104, 0.24);
+}
+
 .status-panel__badge,
 .spinner {
   width: 40px;
@@ -1292,6 +1563,10 @@ select:focus {
 
 .data-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.34);
+}
+
+html[data-theme='dark'] .data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .data-table td {
@@ -1374,7 +1649,7 @@ select:focus {
 }
 
 @media (max-width: 1220px) {
-  /* 中等屏幕响应式模块：把详情页顶区压缩成两列，维持信息卡可读性。 */
+  /* 中等屏幕响应式模块：顶区仍保持双列，但减小挤压感。 */
   .detail-layout-grid {
     grid-template-columns: 1fr 1fr;
     align-items: stretch;
@@ -1382,13 +1657,6 @@ select:focus {
   }
 
   .detail-feature-card {
-    align-self: stretch;
-  }
-
-  .detail-sidebar {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto;
     align-self: stretch;
   }
 }

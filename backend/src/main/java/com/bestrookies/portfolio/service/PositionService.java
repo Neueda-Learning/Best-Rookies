@@ -46,6 +46,7 @@ public class PositionService {
     @Transactional
     public PositionResponse createPosition(PositionCreateRequest request) {
         Portfolio portfolio = portfolioService.getPortfolioEntity(request.portfolioId());
+        Instant effectiveUpdatedAt = request.updatedAt() != null ? request.updatedAt() : Instant.now();
 
         Position position = new Position();
         position.setPortfolio(portfolio);
@@ -54,7 +55,8 @@ public class PositionService {
         position.setQuantity(request.quantity());
         position.setAvgCost(request.avgCost());
         position.setCurrency(request.currency().trim().toUpperCase());
-        position.setUpdatedAt(Instant.now());
+        // 新增持仓时允许前端显式指定日期，用于回填历史录入场景；未传时仍回退当前时间。
+        position.setUpdatedAt(effectiveUpdatedAt);
 
         return toResponse(positionRepository.save(position));
     }

@@ -9,6 +9,10 @@ export function createPortfolio(payload) {
   return api.post('/portfolios', payload)
 }
 
+export function getSupportedCurrencies() {
+  return api.get('/portfolios/currencies/supported')
+}
+
 export function getPortfolio(id) {
   return api.get(`/portfolios/${id}`)
 }
@@ -45,5 +49,9 @@ export function getExchangeRates(baseCurrency, fromCurrencies = []) {
   return api.get('/exchange-rate/rates', {
     params: { baseCurrency, fromCurrencies: fromCurrencies.join(',') }
   })
+}
+
+export function getLatestPrice(ticker) {
+  return api.get(`/prices/${encodeURIComponent(ticker)}/latest`)
 }
 

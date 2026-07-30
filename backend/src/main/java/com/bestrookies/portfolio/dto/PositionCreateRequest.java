@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.Instant;
 
 public record PositionCreateRequest(
     @NotNull(message = "portfolioId is required")
@@ -28,7 +29,9 @@ public record PositionCreateRequest(
 
     @NotBlank(message = "currency is required")
     @Size(min = 3, max = 3, message = "currency must be 3 letters")
-    String currency
+    String currency,
+
+    Instant updatedAt
 ) {
 }
 

@@ -31,8 +31,6 @@
         <MetricCard :label="t('metricMarketValue')" :value="formatCurrency(summary.marketValue, summaryBaseCurrency)" tone="gold" badge="MKT" :hint="t('metricMarketValueHint')" />
         <MetricCard :label="t('metricUnrealizedPnl')" :value="formatCurrency(summary.unrealizedPnL, summaryBaseCurrency)" :tone="pnlTone" badge="PNL" :hint="t('metricUnrealizedPnlHint')" />
         <MetricCard :label="t('metricReturnRate')" :value="formatPercent(summary.returnRate)" :tone="pnlTone" badge="%" :hint="t('metricReturnRateHint')" />
-        <MetricCard :label="t('metricDataQuality')" :value="dataQualityLabel" tone="silver" badge="SRC" :hint="t('metricDataQualityHint')" />
-        <MetricCard :label="t('metricUniqueTickers')" :value="String(uniqueTickers)" tone="silver" badge="TK" :hint="t('metricUniqueTickersHint')" />
         <MetricCard :label="t('metricLastActivity')" :value="latestActivity" tone="silver" badge="ACT" :hint="t('metricLastActivityHint')" />
       </div>
       <div class="detail-layout-grid">
@@ -45,21 +43,6 @@
           <div class="section-heading"><div><h3>{{ t("detailPerformanceBaseline") }}</h3><p>{{ t("detailPerformanceDescription") }}</p></div></div>
           <StatusPanel v-if="!investedTrend.length" variant="empty" :title="t('statusNoTrendTitle')" :message="t('statusNoTrendMessage')" />
           <TrendLineChart v-else :points="investedTrend" :currency="summaryBaseCurrency" />
-        </div>
-        <div class="detail-sidebar">
-          <article class="card info-card stagger-card">
-            <p class="eyebrow">{{ t("detailAboutPortfolio") }}</p>
-            <div class="info-list">
-              <div class="info-list__row"><span>{{ t("fieldPortfolioName") }}</span><strong>{{ portfolio.name }}</strong></div>
-              <div class="info-list__row"><span>{{ t("tableId") }}</span><strong>{{ portfolioCode }}</strong></div>
-              <div class="info-list__row"><span>{{ t("fieldBaseCurrency") }}</span><strong>{{ portfolio.baseCurrency }}</strong></div>
-              <div class="info-list__row"><span>{{ t("listCardCreated") }}</span><strong>{{ formatDisplayDate(portfolio.createdAt) }}</strong></div>
-            </div>
-          </article>
-          <article class="card info-card stagger-card">
-            <p class="eyebrow">{{ t("detailDataNotes") }}</p>
-            <ul class="note-list note-list--compact"><li>{{ t("detailNoteFormula") }}</li><li>{{ t("detailNoteBaseCurrency") }}</li></ul>
-          </article>
         </div>
       </div>
       <div class="card holdings-card">
@@ -76,7 +59,7 @@
             <thead>
               <tr>
                 <th>{{ t("tableIndex") }}</th><th>{{ t("tableAssetType") }}</th><th>{{ t("fieldTicker") }}</th>
-                <th>{{ t("tableQuantity") }}</th><th>{{ t("tableAvgCost") }}</th><th>{{ t("fieldCurrency") }}</th>
+                <th>{{ t("fieldCurrency") }}</th><th>{{ t("tableInvestedCost") }}</th>
                 <th>{{ t("tablePositionCost") }}</th><th>{{ t("tableUpdated") }}</th><th>{{ t("tableAction") }}</th>
               </tr>
             </thead>
@@ -85,9 +68,8 @@
                 <td>{{ index + 1 }}</td>
                 <td><span class="asset-pill">{{ formatAssetType(pos.assetType) }}</span></td>
                 <td><strong>{{ pos.ticker }}</strong></td>
-                <td>{{ formatNumber(pos.quantity, 4) }}</td>
-                <td>{{ formatCurrency(pos.avgCost, pos.currency) }}</td>
                 <td>{{ pos.currency }}</td>
+                <td>{{ formatCurrency(calculatePositionCost(pos), pos.currency) }}</td>
                 <td>{{ formatCurrency(calculatePositionCost(pos), pos.currency) }}</td>
                 <td>{{ formatDisplayDate(pos.updatedAt) }}</td>
                 <td>
@@ -134,7 +116,6 @@ const portfolioId = computed(() => Number(route.params.id))
 const isValidPortfolioId = computed(() => Number.isInteger(portfolioId.value) && portfolioId.value > 0)
 const allocationSeries = computed(() => buildAssetAllocation(positions.value, summaryBaseCurrency.value, ratesByCurrency.value))
 const investedTrend = computed(() => buildInvestedTrend(positions.value, summaryBaseCurrency.value, ratesByCurrency.value))
-const uniqueTickers = computed(() => new Set(positions.value.map((p) => p.ticker).filter(Boolean)).size)
 // 基础币种：优先使用 summary 返回值，兜底 portfolio.baseCurrency
 const summaryBaseCurrency = computed(() => summary.value.baseCurrency || portfolio.value?.baseCurrency || 'USD')
 // 盈亏色调：正绿负红持平灰
@@ -143,12 +124,6 @@ const pnlTone = computed(() => {
   if (r > 0) return 'mint'
   if (r < 0) return 'rose'
   return 'silver'
-})
-// 行情覆盖质量标签，例如 "3 / 5"
-const dataQualityLabel = computed(() => {
-  const live = summary.value.positionsWithLivePrice ?? 0
-  const total = summary.value.totalPositions ?? 0
-  return `${live} / ${total}`
 })
 const latestActivity = computed(() => {
   const ts = positions.value.map((p) => p.updatedAt).filter(Boolean).sort((a, b) => new Date(b) - new Date(a))

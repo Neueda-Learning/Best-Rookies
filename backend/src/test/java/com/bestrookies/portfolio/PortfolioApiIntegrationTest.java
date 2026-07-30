@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,6 +150,24 @@ class PortfolioApiIntegrationTest {
             .andExpect(jsonPath("$.baseCurrency").value("USD"))
             .andExpect(jsonPath("$.totalCost").value(95.6522))
             .andExpect(jsonPath("$.marketValue").value(95.6522));
+    }
+
+    @Test
+    void shouldCreatePositionWithCustomUpdatedAt() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/v1/portfolios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"History Portfolio\", \"baseCurrency\": \"USD\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        Map<String, Object> responseBody = objectMapper.readValue(createResult.getResponse().getContentAsString(), Map.class);
+        Long portfolioId = ((Number) responseBody.get("id")).longValue();
+
+        mockMvc.perform(post("/api/v1/positions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"portfolioId\": " + portfolioId + ", \"assetType\": \"ETF\", \"ticker\": \"SPY\", \"quantity\": 1, \"avgCost\": 500, \"currency\": \"USD\", \"updatedAt\": \"2026-01-15T12:00:00Z\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.updatedAt", Matchers.startsWith("2026-01-15T12:00:00Z")));
     }
 }
 
