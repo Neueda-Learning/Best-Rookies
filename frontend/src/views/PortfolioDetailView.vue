@@ -39,12 +39,12 @@
         <div class="card detail-feature-card detail-feature-card--allocation stagger-card">
           <div class="section-heading"><div><h3>{{ t("detailAssetAllocation") }}</h3><p>{{ t("detailAssetAllocationDescription") }}</p></div></div>
           <StatusPanel v-if="!allocationSeries.length" variant="empty" :title="t('statusNoAllocationTitle')" :message="t('statusNoAllocationMessage')" />
-          <AllocationDonutChart v-else :segments="allocationSeries" :total-value="summary.totalCost" :currency="portfolio.baseCurrency" />
+          <AllocationDonutChart v-else :segments="allocationSeries" :total-value="summary.totalCost" :currency="summaryBaseCurrency" />
         </div>
         <div class="card detail-feature-card detail-feature-card--trend stagger-card">
           <div class="section-heading"><div><h3>{{ t("detailPerformanceBaseline") }}</h3><p>{{ t("detailPerformanceDescription") }}</p></div></div>
           <StatusPanel v-if="!investedTrend.length" variant="empty" :title="t('statusNoTrendTitle')" :message="t('statusNoTrendMessage')" />
-          <TrendLineChart v-else :points="investedTrend" :currency="portfolio.baseCurrency" />
+          <TrendLineChart v-else :points="investedTrend" :currency="summaryBaseCurrency" />
         </div>
         <div class="detail-sidebar">
           <article class="card info-card stagger-card">
@@ -107,7 +107,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getApiErrorMessage } from '../api/client'
-import { deletePosition, getPortfolio, getPortfolioSummary, listPositions } from '../api/portfolio'
+import { deletePosition, getExchangeRates, getPortfolio, getPortfolioSummary, listPositions } from '../api/portfolio'
 import AllocationDonutChart from '../components/AllocationDonutChart.vue'
 import MetricCard from '../components/MetricCard.vue'
 import PositionForm from '../components/PositionForm.vue'
@@ -125,14 +125,15 @@ const { success, error: notifyError } = useToast()
 const portfolio = ref(null)
 const summary = ref({ totalPositions: 0, totalCost: 0, marketValue: 0, unrealizedPnL: 0, returnRate: 0, positionsWithLivePrice: 0, positionsWithFallback: 0, baseCurrency: '' })
 const positions = ref([])
+const ratesByCurrency = ref({})
 const isLoading = ref(true)
 const loadError = ref('')
 const deletingPositionIds = reactive({})
 const showPositionForm = ref(false)
 const portfolioId = computed(() => Number(route.params.id))
 const isValidPortfolioId = computed(() => Number.isInteger(portfolioId.value) && portfolioId.value > 0)
-const allocationSeries = computed(() => buildAssetAllocation(positions.value))
-const investedTrend = computed(() => buildInvestedTrend(positions.value))
+const allocationSeries = computed(() => buildAssetAllocation(positions.value, summaryBaseCurrency.value, ratesByCurrency.value))
+const investedTrend = computed(() => buildInvestedTrend(positions.value, summaryBaseCurrency.value, ratesByCurrency.value))
 const uniqueTickers = computed(() => new Set(positions.value.map((p) => p.ticker).filter(Boolean)).size)
 // 基础币种：优先使用 summary 返回值，兜底 portfolio.baseCurrency
 const summaryBaseCurrency = computed(() => summary.value.baseCurrency || portfolio.value?.baseCurrency || 'USD')
@@ -177,9 +178,26 @@ async function reload() {
     portfolio.value = portfolioRes.data
     summary.value = summaryRes.data
     positions.value = Array.isArray(positionsRes.data) ? positionsRes.data : []
+
+    const baseCurrency = summary.value.baseCurrency || portfolio.value?.baseCurrency || 'USD'
+    const fromCurrencies = [...new Set(positions.value.map((p) => p?.currency).filter(Boolean))]
+      .filter((currency) => String(currency).toUpperCase() !== String(baseCurrency).toUpperCase())
+
+    if (!fromCurrencies.length) {
+      ratesByCurrency.value = {}
+    } else {
+      try {
+        const ratesRes = await getExchangeRates(baseCurrency, fromCurrencies)
+        ratesByCurrency.value = ratesRes?.data && typeof ratesRes.data === 'object' ? ratesRes.data : {}
+      } catch {
+        // 汇率接口失败时图表回退使用 1:1，避免页面不可用。
+        ratesByCurrency.value = {}
+      }
+    }
   } catch (error) {
     portfolio.value = null
     positions.value = []
+    ratesByCurrency.value = {}
     loadError.value = getApiErrorMessage(error, t('errorLoadPortfolioFallback'))
   } finally {
     isLoading.value = false
