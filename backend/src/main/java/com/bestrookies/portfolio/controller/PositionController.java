@@ -3,10 +3,12 @@ package com.bestrookies.portfolio.controller;
 import com.bestrookies.portfolio.dto.PositionCreateRequest;
 import com.bestrookies.portfolio.dto.PositionResponse;
 import com.bestrookies.portfolio.dto.PositionUpdateRequest;
+import com.bestrookies.portfolio.entity.AssetType;
 import com.bestrookies.portfolio.exception.ApiErrorResponse;
 import com.bestrookies.portfolio.service.PositionService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,6 +55,38 @@ public class PositionController {
     @Operation(summary = "Create a position")
     public PositionResponse createPosition(@Valid @RequestBody PositionCreateRequest request) {
         return positionService.createPosition(request);
+    }
+
+    // 获取资产类型列表（用于前端资产类型下拉框）
+    @GetMapping("/asset-types/supported")
+    @Operation(summary = "Get supported asset types")
+    public ResponseEntity<List<String>> getSupportedAssetTypes() {
+        return ResponseEntity.ok(positionService.listAssetTypes());
+    }
+
+    // 按资产类型获取可选代码（用于前端ticker下拉框）
+    @GetMapping("/tickers/supported")
+    @Operation(summary = "Get supported ticker codes by asset type")
+    public ResponseEntity<List<String>> getSupportedTickersByAssetType(@RequestParam AssetType assetType) {
+        return ResponseEntity.ok(positionService.listSupportedTickers(assetType));
+    }
+
+    // 按资产类型 + 关键字搜索可选代码（用于前端可输入搜索下拉）
+    @GetMapping("/tickers/search")
+    @Operation(summary = "Search ticker codes by asset type and keyword")
+    public ResponseEntity<List<String>> searchSupportedTickers(
+        @RequestParam AssetType assetType,
+        @RequestParam String q,
+        @RequestParam(defaultValue = "20") int limit
+    ) {
+        return ResponseEntity.ok(positionService.searchSupportedTickers(assetType, q, limit));
+    }
+
+    // 获取所有资产类型的可选代码（包含实时结果）
+    @GetMapping("/tickers/supported/all")
+    @Operation(summary = "Get supported ticker codes for all asset types")
+    public ResponseEntity<Map<String, List<String>>> getSupportedTickersForAllAssetTypes() {
+        return ResponseEntity.ok(positionService.listSupportedTickersForAllAssetTypes());
     }
 
     // 列出所有或特定组合的持仓
