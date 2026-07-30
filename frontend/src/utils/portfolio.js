@@ -16,6 +16,16 @@ export function calculatePositionCost(position) {
   return toNumber(position?.quantity) * toNumber(position?.avgCost)
 }
 
+function getRateForCurrency(currency, baseCurrency, ratesByCurrency) {
+  const from = String(currency || '').toUpperCase()
+  const base = String(baseCurrency || '').toUpperCase()
+  if (!from || !base || from === base) {
+    return 1
+  }
+  const rate = Number(ratesByCurrency?.[from])
+  return Number.isFinite(rate) && rate > 0 ? rate : 1
+}
+
 export function formatAssetType(assetType) {
   if (!assetType) {
     return t('assetTypeUnknown')
@@ -48,10 +58,11 @@ export function formatAssetType(assetType) {
   return t('assetTypeOther')
 }
 
-export function buildAssetAllocation(positions) {
+export function buildAssetAllocation(positions, baseCurrency = 'USD', ratesByCurrency = {}) {
   const totals = positions.reduce((map, position) => {
     const key = position?.assetType || 'OTHER'
-    const nextValue = (map.get(key) || 0) + calculatePositionCost(position)
+    const rate = getRateForCurrency(position?.currency, baseCurrency, ratesByCurrency)
+    const nextValue = (map.get(key) || 0) + calculatePositionCost(position) * rate
     map.set(key, nextValue)
     return map
   }, new Map())
@@ -66,13 +77,16 @@ export function buildAssetAllocation(positions) {
     .sort((left, right) => right.value - left.value)
 }
 
-export function buildInvestedTrend(positions) {
+export function buildInvestedTrend(positions, baseCurrency = 'USD', ratesByCurrency = {}) {
   const timeline = [...positions]
     .filter((position) => position?.updatedAt)
     .sort((left, right) => new Date(left.updatedAt) - new Date(right.updatedAt))
 
   if (!timeline.length) {
-    const currentTotal = positions.reduce((sum, position) => sum + calculatePositionCost(position), 0)
+    const currentTotal = positions.reduce((sum, position) => {
+      const rate = getRateForCurrency(position?.currency, baseCurrency, ratesByCurrency)
+      return sum + calculatePositionCost(position) * rate
+    }, 0)
 
     return currentTotal > 0
       ? [{ id: 'snapshot', shortLabel: t('trendCurrent'), value: currentTotal }]
@@ -83,7 +97,8 @@ export function buildInvestedTrend(positions) {
 
   // The backend does not expose live price history yet, so we chart cumulative invested cost as a reliable baseline.
   return timeline.map((position, index) => {
-    runningTotal += calculatePositionCost(position)
+    const rate = getRateForCurrency(position?.currency, baseCurrency, ratesByCurrency)
+    runningTotal += calculatePositionCost(position) * rate
 
     return {
       id: position.id ?? index,

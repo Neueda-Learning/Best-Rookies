@@ -4,7 +4,9 @@ import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,6 +131,29 @@ public class ExchangeRateService {
 
         // from → to = perUsdRates[to] / perUsdRates[from]
         return toPerUsd.divide(fromPerUsd, 8, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 批量获取多个币种到同一基础币种的汇率。
+     * 返回结构示例：{ "EUR": 1.0870, "CNY": 0.1378 }
+     */
+    public Map<String, BigDecimal> getRatesToBase(List<String> fromCurrencies, String baseCurrency) {
+        if (fromCurrencies == null || fromCurrencies.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<String, BigDecimal> out = new LinkedHashMap<>();
+        String base = baseCurrency == null ? "" : baseCurrency.trim().toUpperCase(Locale.ROOT);
+
+        for (String from : fromCurrencies) {
+            if (from == null || from.isBlank()) {
+                continue;
+            }
+            String normalizedFrom = from.trim().toUpperCase(Locale.ROOT);
+            out.put(normalizedFrom, getRate(normalizedFrom, base));
+        }
+
+        return Map.copyOf(out);
     }
 
     /**

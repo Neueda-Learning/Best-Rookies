@@ -40,3 +40,10 @@ export function getSupportedTickersByAssetType(assetType) {
 export function searchSupportedTickers(assetType, q, limit = 20) {
   return api.get('/positions/tickers/search', { params: { assetType, q, limit } })
 }
+
+export function getExchangeRates(baseCurrency, fromCurrencies = []) {
+  return api.get('/exchange-rate/rates', {
+    params: { baseCurrency, fromCurrencies: fromCurrencies.join(',') }
+  })
+}
+
